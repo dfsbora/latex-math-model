@@ -1,15 +1,13 @@
-# MATHEMATICAL REASONING 
+# LATEX MATHEMATICAL LANGUAGE MODEL
 
 ## Overview
-This project aims to leverage [Universal Transformers](https://github.com/andreamad8/Universal-Transformer-Pytorch) to solve a range of mathematical problems. Given a math question as the input, the model should generate the mathematical solution. We seek to explore UT's recursive processing abilities as well as enhancing its performance.
+This project aims to train an RNN language model on a mathematical book written in Latex. The goal of the model is to generate text that follows the Latex syntax and resembles mathematical content. By training the model on such data, we aim to explore the RNN's ability to capture short-term dependencies and reproduce the syntactic structures of Latex. 
 
-## Datasets
-The MATH dataset contains the final answer:
-https://huggingface.co/datasets/math_dataset
+## Dataset
+The dataset is obtained from the open-source textbook on algebraic stacks ["The stacks"](https://github.com/stacks/stacks-project)
 
-This other dataset provides step-by-step solutions:
-https://www.kaggle.com/datasets/mathurinache/math-dataset
-
+## Model architecture
+The primary model architecture used in this project is a recurrent neural network (RNN).
 
 ## Usage
 ### Installation
@@ -17,3 +15,7 @@ https://www.kaggle.com/datasets/mathurinache/math-dataset
 ### Training
 
 ### Testing
+
+## Acknowledgments
+
+The initial idea for this project was inspired by Andrej Karpathy's blog post ["The Unreasonable Effectiveness of Recurrent Neural Networks"](https://karpathy.github.io/2015/05/21/rnn-effectiveness)
