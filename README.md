@@ -10,6 +10,9 @@ The dataset is obtained from the open-source textbook on algebraic stacks ["The 
 The primary model architecture used in this project is a recurrent neural network (RNN).
 
 ## Usage
+
+python prompt.py --model_path model_YYYYMMDD-HHMMSS.pth --vocab_path vocab_mappings_YYYYMMDD-HHMMSS.pkl --initial_str "Given a matrix A," --predict_len 200 --temperature 0.8
+
 ### Installation
 
 ### Training
