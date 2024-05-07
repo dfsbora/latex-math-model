@@ -15,7 +15,8 @@ def load_model(model_path, vocab_size, embedding_dim, hidden_dim, num_layers):
 def load_vocab_mappings(vocab_path):
     with open(vocab_path, 'rb') as f:
         vocab_mappings = pickle.load(f)
-    return vocab_mappings
+    vocab_size = len(vocab_mappings["idx_to_token"])
+    return vocab_mappings, vocab_size
 
 def predict(model, vocab_mappings, initial_str, predict_len=100, temperature=1.0):
     device = next(model.parameters()).device
@@ -58,11 +59,11 @@ def main():
 
     args = parser.parse_args()
 
-    model = load_model(args.model_path, vocab_size=7514, embedding_dim=256, hidden_dim=512, num_layers=2)
-    vocab_mappings = load_vocab_mappings(args.vocab_path)
+    vocab_mappings, vocab_size = load_vocab_mappings(args.vocab_path)
+    model = load_model(args.model_path, vocab_size=vocab_size, embedding_dim=256, hidden_dim=512, num_layers=2)
 
     output_text = predict(model, vocab_mappings, args.initial_str, args.predict_len, args.temperature)
-    print(output_text)
+    print("\n", output_text)
 
 if __name__ == '__main__':
     main()
