@@ -1,14 +1,18 @@
 import os
 import subprocess
+import argparse
 
 def clone_git_if_not_exist(repo_url='https://github.com/stacks/stacks-project', target_folder="stacks-project"):
     """
     Clone the git repository if the folder does not exist.
     """
 
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    target_folder_abs = os.path.join(current_dir, target_folder)
+
     if not os.path.exists(target_folder):
         print(target_folder, " does not exist yet.")
-        subprocess.run(['git', 'clone', repo_url, target_folder])
+        subprocess.run(['git', 'clone', repo_url, target_folder_abs])
         print("Cloning successful")
     else:
         print(target_folder, " already exists.")
@@ -58,24 +62,27 @@ def read_chapters_files(input_file='chapter_files.txt', output_file='data.tex'):
         for tex_file in tex_files:
             tex_file_path = os.path.join("stacks-project", tex_file)
 
-            with open(tex_file_path, 'r') as input_tex:
-                copy = False
-                for input_line in input_tex:
-                    # Filter empty lines
-                    if input_line == "\n":
-                        continue
+            try:
+                with open(tex_file_path, 'r') as input_tex:
+                    copy = False
+                    for input_line in input_tex:
+                        # Filter empty lines
+                        if input_line == "\n":
+                            continue
 
-                    # Filter end of chapter
-                    if input_line[1:] == "input{chapters}\n":
-                        break
+                        # Filter end of chapter
+                        if input_line[1:] == "input{chapters}\n":
+                            break
 
-                    if copy:
-                        content = input_line.strip()
-                        out_file.write(content + '\n')
+                        if copy:
+                            content = input_line.strip()
+                            out_file.write(content + '\n')
 
-                    # Filter begin of chapter
-                    if input_line[1:] == "tableofcontents\n":
-                        copy = True
+                        # Filter begin of chapter
+                        if input_line[1:] == "tableofcontents\n":
+                            copy = True
+            except:
+                pass
 
     print("Concatenated clean data:  ", output_file)
 
@@ -96,6 +103,10 @@ def latex_to_text(input_file, output_file):
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Preprocess the data")
+    parser.add_argument('--add_miscellany', type=bool, default=False, help='Whether to include chapters after the "Miscellany" section.')
+    args = parser.parse_args()
+
     clone_git_if_not_exist()
-    get_chapters_names(add_miscellany=False)
+    get_chapters_names(add_miscellany=args.add_miscellany)
     read_chapters_files()
