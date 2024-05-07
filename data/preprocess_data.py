@@ -49,7 +49,7 @@ def get_chapters_names(input_file='stacks-project/chapters.tex', output_file='ch
         raise
 
 
-def read_chapters_files(input_file='chapter_files.txt', output_file='data.tex'):
+def read_chapters_files(input_file='chapter_files.txt', output_file='data.tex', include_eos=True):
     """
     Reads from a txt the names of latex files, clean the data, and concatenates their contents.
     """
@@ -66,6 +66,8 @@ def read_chapters_files(input_file='chapter_files.txt', output_file='data.tex'):
         print(f"Error: {e}")
         raise
 
+
+    eos_flag = False
     with open(output_file_abs, 'w') as out_file:
 
         for tex_file in tex_files:
@@ -75,21 +77,34 @@ def read_chapters_files(input_file='chapter_files.txt', output_file='data.tex'):
                 with open(tex_file_path, 'r') as input_tex:
                     copy = False
                     for input_line in input_tex:
-                        # Filter empty lines
-                        if input_line == "\n":
-                            continue
-
                         # Filter end of chapter
                         if input_line[1:] == "input{chapters}\n":
                             break
 
                         if copy:
-                            content = input_line.strip()
-                            out_file.write(content + '\n')
+                            # Filter empty lines
+                            if input_line == "\n":
+                                # Include tag of eos
+                                if eos_flag and include_eos:
+                                    out_file.write("eos ")
+                                    eos_flag = False
+                                else:
+                                    pass
+
+                            # Copy content
+                            else:
+                                content = input_line.strip()
+                                out_file.write(content + '\n')
+                                #todo decide if really keeps no eos after label
+                                if content[:7] == "\label{":
+                                    eos_flag = False
+                                else:
+                                    eos_flag = True
 
                         # Filter begin of chapter
                         if input_line[1:] == "tableofcontents\n":
                             copy = True
+                            eos_flag = False
             except:
                 pass
 
