@@ -11,6 +11,13 @@ The primary model architecture used in this project is a recurrent neural networ
 
 ## Usage
 
+### Get data
+
+python data/preprocess_data.py [--add_miscellany True]
+
+To include miscellaneous chapters, set --add_miscellany to True.
+
+### Prompt
 python prompt.py --model_path model_YYYYMMDD-HHMMSS.pth --vocab_path vocab_mappings_YYYYMMDD-HHMMSS.pkl --initial_str "Given a matrix A," --predict_len 200 --temperature 0.8
 
 ### Installation
