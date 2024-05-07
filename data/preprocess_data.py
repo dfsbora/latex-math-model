@@ -10,7 +10,7 @@ def clone_git_if_not_exist(repo_url='https://github.com/stacks/stacks-project', 
     current_dir = os.path.dirname(os.path.abspath(__file__))
     target_folder_abs = os.path.join(current_dir, target_folder)
 
-    if not os.path.exists(target_folder):
+    if not os.path.exists(target_folder_abs):
         print(target_folder, " does not exist yet.")
         subprocess.run(['git', 'clone', repo_url, target_folder_abs])
         print("Cloning successful")
@@ -26,9 +26,13 @@ def get_chapters_names(input_file='stacks-project/chapters.tex', output_file='ch
                             (Not algebra content). Default is False.
     """
 
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    input_file_abs = os.path.join(current_dir, input_file)
+    output_file_abs = os.path.join(current_dir, output_file)
+
     try:
-        with open(input_file, 'r') as in_file:
-            with open(output_file, 'w') as out_file:
+        with open(input_file_abs, 'r') as in_file:
+            with open(output_file_abs, 'w') as out_file:
                 for line in in_file:
                     if line.strip()[:16] == "\item \hyperref[":
                         chapter_name = line.split('[')[1].split(']')[0]
@@ -50,14 +54,19 @@ def read_chapters_files(input_file='chapter_files.txt', output_file='data.tex'):
     Reads from a txt the names of latex files, clean the data, and concatenates their contents.
     """
 
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    input_file_abs = os.path.join(current_dir, input_file)
+    output_file_abs = os.path.join(current_dir, output_file)
+
+
     try:
-        with open(input_file, 'r') as input_file:
+        with open(input_file_abs, 'r') as input_file:
             tex_files = [line.strip() for line in input_file if line.strip().endswith('.tex')]
     except FileNotFoundError as e:
         print(f"Error: {e}")
         raise
 
-    with open(output_file, 'w') as out_file:
+    with open(output_file_abs, 'w') as out_file:
 
         for tex_file in tex_files:
             tex_file_path = os.path.join("stacks-project", tex_file)

@@ -4,6 +4,7 @@ import torch.nn as nn
 import pickle
 import os
 from datetime import datetime
+import argparse
 from models.lstm import LSTMModel
 from data.make_dataset import get_data_loader
 
@@ -55,5 +56,10 @@ def train(file_path, batch_size, seq_length, epochs, embedding_dim, hidden_dim, 
     print(f"Model and vocab mappings saved: '{model_path}', '{vocab_path}'")
 
 if __name__ == '__main__':
-    train('data/algebra.tex', batch_size=64, seq_length=100, epochs=20,
+    parser = argparse.ArgumentParser(description="Train a LSTM model")
+    parser.add_argument('--data_path', type=str, default='data/data.tex', help='Path to the data file.')
+    args = parser.parse_args()
+
+    print("Training data: ", args.data_path)
+    train(file_path=args.data_path, batch_size=64, seq_length=100, epochs=20,
           embedding_dim=256, hidden_dim=512, num_layers=2)
