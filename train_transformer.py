@@ -5,7 +5,7 @@ import pickle
 import os
 from datetime import datetime
 import argparse
-from models.transformer import TransformerModel  # Ensure this path is correct
+from models.transformer import TransformerModel
 from data.make_dataset import get_data_loader
 
 def train(file_path, batch_size, seq_length, epochs, embedding_dim, num_heads, num_layers, dim_feedforward):
@@ -53,5 +53,5 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     print("Training data: ", args.data_path)
-    train(file_path=args.data_path, batch_size=64, seq_length=100, epochs=20,
+    train(file_path=args.data_path, batch_size=64, seq_length=100, epochs=12,
           embedding_dim=256, num_heads=8, num_layers=2, dim_feedforward=512)
