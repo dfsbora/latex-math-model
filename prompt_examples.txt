@@ -16,7 +16,7 @@ Given a matrix A,}&&u(\tilde{b})=(f+h\circf)^{-1}(x):\{1\}\longrightarrow\{1,\si
 
 Transformer - whole dataset
 
-Prompt: C
+Prompt: Suppose
 
 Output:
 functors \ar \ar \ar S_ ) S_ ( S_ S_ ) ( S_ S_ S_ S_ S_ S_ \end ( ) ( ( ( ( ( ( ( S_ S_ ( ( ( ( ) ) S_ ( ) ( S_ ) ( ) ) ( ( ( S_ ( ( ( ( ( ( ) ( ) S_ ) ( ( ( ) ) ( ( ( ) S_ ) ) ) ( ( ( ( S_ ( ( ( ( ( ( ( ( ( S_ ( S_ ( S_ ( ( ) ( ( ( ( )
