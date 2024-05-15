@@ -19,9 +19,11 @@ To include miscellaneous chapters, set --add_miscellany to True.
 
 ### Train
 
-python train.py [--data_path data/algebra.tex]
+python train.py [--data_path data/algebra.tex]  [--disable_wandb]
 
 For a quicker train test, use algebra.tex file. Default uses the cleaned data.tex file
+
+wandb environment is disabled with --disable_wandb on command line
 
 ### Prompt
 python prompt.py --model_path model_YYYYMMDD-HHMMSS.pth --vocab_path vocab_mappings_YYYYMMDD-HHMMSS.pkl --initial_str "Given a matrix A," --predict_len 200 --temperature 0.8
