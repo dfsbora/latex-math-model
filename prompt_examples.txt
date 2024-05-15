@@ -1,0 +1,22 @@
+INITIAL TESTS
+LSTM - small dataset 
+
+Prompt: Given a matrix A
+Output: 
+Given a matrix A,\inR'$,$p_B'\inS$and$f\otimesm=0$.Thisgivesanexpressionoftheexactsequence$0\toM'\toM\to0,\ldots,\ldots,M_i\toN''\to0$.Henceweknowthat$M'$isinjective.Nextweprovethat$R_i\toM'_{g_i}$issurjective.\end{lemma}\begin{proof}FortheequalityandProposition\ref{proposition-ML-characterization}showsthatthelemmaisthefollowinglemmaandthesurjectionofdirectedsystemofuniversallyflatmodulesoverapresentation.\end{proof}\section{Descendinghenselianrings}\label{A_0}\noindentInthissectionweputT.~Nakayama.\begin{proposition}\label{example-noetherian-topology-on-spec}\begin{slogan}morearingofringsandinducesrings.\begin{lemma}\label{J}Let$R\toS$bearingmap.Let$M$bean$R$-module.Chooseanexample-affine-open-not-standardassociatedprime$f(R)
+
+
+LSTM - whole dataset
+
+Prompt: Given a matrix A
+Output: 
+
+Given a matrix A,}&&u(\tilde{b})=(f+h\circf)^{-1}(x):\{1\}\longrightarrow\{1,\sigma\}.$$Inparticular,if$W\toV$is\'etaleand$g$isformallysmooth,then$s\circr=t\circr$and$g\circf=s$.\itemIf$u\inU$and$g$isaset-theoreticpre-equivalencerelation,thenthereexistsacovering$\{y_{ij}:u(U_i)\tov(u(U_i))}$.\end{enumerate}Inthiscase$s=(t,T),(t\circa)(g)$for$t\inG$with$g(f)=g(r)=g(a)$.\end{definition}\noindentWarning:Givenabiggroupoidschemes$(U,R,s,t,c)$offibredcategories
+
+
+Transformer - whole dataset
+
+Prompt: C
+
+Output:
+functors \ar \ar \ar S_ ) S_ ( S_ S_ ) ( S_ S_ S_ S_ S_ S_ \end ( ) ( ( ( ( ( ( ( S_ S_ ( ( ( ( ) ) S_ ( ) ( S_ ) ( ) ) ( ( ( S_ ( ( ( ( ( ( ) ( ) S_ ) ( ( ( ) ) ( ( ( ) S_ ) ) ) ( ( ( ( S_ ( ( ( ( ( ( ( ( ( S_ ( S_ ( S_ ( ( ) ( ( ( ( )
