@@ -38,6 +38,7 @@ def train(file_path, batch_size, seq_length, epochs, embedding_dim, num_heads, n
             if i % 100 == 0:
                 print(f"Epoch: {epoch + 1}, Loss: {loss.item()}")
                 wandb.log({'loss': loss.item()})
+        wandb.log({'loss_by_epoch': loss.item()})
 
     print("Training complete.")
     timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
@@ -63,7 +64,7 @@ def train(file_path, batch_size, seq_length, epochs, embedding_dim, num_heads, n
     wandb.log_artifact(vocab_artifact)
 
 
-def generate_config_dict(arguments, architecture_name='LSTM'):
+def generate_config_dict(arguments, architecture_name='transformer'):
     original_dict = vars(arguments)
     keys = list(original_dict.keys())
     new_keys = keys[:-1]

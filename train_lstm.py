@@ -46,6 +46,7 @@ def train(file_path, batch_size, seq_length, epochs, embedding_dim, hidden_dim, 
             if i % 100 == 0:
                 print(f"Epoch: {epoch + 1}, Loss: {loss.item()}")
                 wandb.log({'loss': loss.item()} )
+        wandb.log({'loss_by_epoch': loss.item()})
 
     print("Training complete.")
     timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
