@@ -7,6 +7,7 @@ Loads the model state from a file.
 
 import torch
 import torch.optim as optim
+import wandb
 from torch import nn
 from torch.cuda.amp import autocast, GradScaler
 
@@ -81,7 +82,7 @@ def train_model(model, data_loader, num_epochs, lr=1e-4, save_path="model.pth",
         use_mixed_precision: Whether to use mixed precision training (default: False).
         accumulation_steps: Number of batches to accumulate gradients before updating weights.
 
-    Note:
+    Optimization techniques applied (to be able to run the model on a gaming laptop):
         Mixed Precision Training is a technique that utilizes both 16-bit (half precision)
         and 32-bit (single precision) floating-point numbers to train deep learning models.
         This approach aims to reduce memory usage and increase computational efficiency
@@ -99,6 +100,20 @@ def train_model(model, data_loader, num_epochs, lr=1e-4, save_path="model.pth",
     criterion = nn.CrossEntropyLoss(ignore_index=0)  # Define loss function, ignoring padding index
     optimizer = optim.Adam(model.parameters(), lr=lr)  # Define optimizer
     scaler = GradScaler() if use_mixed_precision else None  # Initialize GradScaler if mixed precision is used
+
+    # Initialize Weights and Biases
+    wandb.init(
+        project="math_latex_project",
+        # TODO: track hyperparameters and run metadata: add more parameters to login
+        config={
+            "architecture": "Universal Transformer",
+            "dataset": "The Stacks Project",
+            # "epochs": 10,
+            "learning_rate": lr,
+            "epochs": num_epochs,
+            "batch_size": data_loader.batch_size,
+        }
+    )
 
     for epoch in range(num_epochs):
         total_loss = 0
@@ -133,6 +148,9 @@ def train_model(model, data_loader, num_epochs, lr=1e-4, save_path="model.pth",
 
             total_loss += loss.item()  # Accumulate loss
 
+            # Log the loss to wandb
+            wandb.log({"loss_by_epoch": loss.item()})
+
         # Handle remaining gradients after the last batch of the epoch
         if accumulation_counter != 0:
             if use_mixed_precision:
@@ -143,10 +161,15 @@ def train_model(model, data_loader, num_epochs, lr=1e-4, save_path="model.pth",
             optimizer.zero_grad()  # Zero the gradients after accumulation
 
         avg_loss = total_loss / len(data_loader)  # Calculate average loss
-        print(f'Epoch {epoch + 1}/{num_epochs}, Loss: {avg_loss}')  # Print loss
+        print(f'Epoch {epoch + 1}/{num_epochs}, Loss: {avg_loss}')
 
         # Save the model state
         torch.save(model.state_dict(), save_path)
+
+        # Log the average loss to wandb
+        wandb.log({"loss": avg_loss})
+
+    wandb.finish()
 
 
 def evaluate_model(model, data_loader):
@@ -170,7 +193,7 @@ def evaluate_model(model, data_loader):
             total_loss += loss.item()  # Accumulate loss
 
     avg_loss = total_loss / len(data_loader)  # Calculate average loss
-    print(f'Validation Loss: {avg_loss}')  # Print loss
+    print(f'Validation Loss: {avg_loss}')
 
 
 def load_model(model, path):

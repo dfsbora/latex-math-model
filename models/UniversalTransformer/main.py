@@ -55,8 +55,7 @@ def main():
     )
 
     # TODO:
-    # num_epochs = 10  # Number of epochs to train
-    num_epochs = 2
+    num_epochs = 10  # Number of epochs to train
 
     # Train the model
     train_model(model, data_loader, num_epochs, save_path=model_save_path, use_mixed_precision=True)
