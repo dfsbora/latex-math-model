@@ -35,7 +35,8 @@ class LaTeXTokenizer:
         filepaths = self.load_data()  # Load all .tex file paths
         tokenizer = Tokenizer(models.BPE())  # Initialize a BPE tokenizer model
         tokenizer.pre_tokenizer = pre_tokenizers.Whitespace()  # Pre-tokenize using whitespace
-        trainer = trainers.BpeTrainer(vocab_size=self.vocab_size, special_tokens=["[PAD]", "[UNK]", "[CLS]", "[SEP]", "[MASK]"])  # Define a trainer with special tokens
+        trainer = trainers.BpeTrainer(
+            vocab_size=self.vocab_size, special_tokens=["[PAD]", "[UNK]", "[CLS]", "[SEP]", "[MASK]"])
 
         def batch_iterator(filepaths, batch_size=1000):
             # Function to read files in batches
