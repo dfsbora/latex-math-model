@@ -2,6 +2,8 @@ from nltk.tokenize import word_tokenize
 import numpy as np
 import os
 import matplotlib.pyplot as plt
+from collections import Counter
+
 
 def read_file(file_path):
     with open(file_path, 'r', encoding='utf-8') as file:
@@ -12,12 +14,17 @@ def read_file(file_path):
 def count_tokens_between_eos(text):
     # Tokenize the text
     tokens = word_tokenize(text)
+    freq_count_tokens = Counter(tokens)
+    print("\nNumber of tokens in the text (word_tokenize): ", len(tokens))
+    print("\nNumber of unique tokens in the text (word_tokenize): ", len(set(tokens)))
+    print("\nMost common tokens: ", freq_count_tokens.most_common(30))
 
     # Find indices of "eos" occurrences
     eos_indices = [i for i, token in enumerate(tokens) if token == "eos"]
 
     # Calculate token counts between subsequent "eos" occurrences
     token_counts = []
+
     for i in range(len(eos_indices) - 1):
         start_index = eos_indices[i] + 1
         end_index = eos_indices[i + 1]
@@ -35,7 +42,8 @@ def stats(vector):
     vector = np.array(vector)
     mean = np.mean(vector)
     median = np.median(vector)
-    print(f"Mean: {mean}\nMedian: {median}")
+    total = np.sum(vector)
+    print(f"Mean: {mean}\nMedian: {median}\nTotal: {total}")
 
 
 file = 'data.tex'
