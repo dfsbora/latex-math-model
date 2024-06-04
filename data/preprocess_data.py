@@ -129,8 +129,10 @@ def latex_to_text(input_file, output_file):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Preprocess the data")
     parser.add_argument('--add_miscellany', type=bool, default=False, help='Whether to include chapters after the "Miscellany" section.')
+    parser.add_argument('--add_eos', type=bool, default=False, help='Whether to include EOS tokens.')
+    parser.add_argument('--output_file', type=str, default='data.tex', help='Final data file name.')
     args = parser.parse_args()
 
     clone_git_if_not_exist()
     get_chapters_names(add_miscellany=args.add_miscellany)
-    read_chapters_files()
+    read_chapters_files(output_file=args.output_file, include_eos=args.add_eos)
