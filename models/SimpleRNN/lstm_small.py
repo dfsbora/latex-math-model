@@ -55,8 +55,30 @@ dataset = LaTeXDataset(filepaths)
 train_size = int(0.8 * len(dataset))
 val_size = len(dataset) - train_size
 train_dataset, val_dataset = random_split(dataset, [train_size, val_size])
-train_loader = DataLoader(train_dataset, batch_size=64, shuffle=True, collate_fn=collate_fn)
-val_loader = DataLoader(val_dataset, batch_size=64, shuffle=False, collate_fn=collate_fn)
+train_loader = DataLoader(train_dataset, batch_size=16, shuffle=True, collate_fn=collate_fn)
+val_loader = DataLoader(val_dataset, batch_size=16, shuffle=False, collate_fn=collate_fn)
+
+
+# Text Generation
+def generate_text(model, start_seq, length, temperature=1.0):
+    model.eval()
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model.to(device)
+
+    chars = [char for char in start_seq]
+    input_seq = torch.tensor([dataset.char_to_idx[char] for char in chars], dtype=torch.long).unsqueeze(0).to(device)
+    hidden = model.init_hidden(1)
+    hidden = tuple([each.data for each in hidden])
+
+    for _ in range(length):
+        output, hidden = model(input_seq, hidden)
+        output = output / temperature
+        probs = nn.functional.softmax(output[0, -1], dim=-1).data.cpu()
+        char_idx = torch.multinomial(probs, 1).item()
+        chars.append(dataset.idx_to_char[char_idx])
+        input_seq = torch.tensor([[char_idx]], dtype=torch.long).to(device)
+
+    return ''.join(chars)
 
 
 # Model Definition
@@ -80,39 +102,17 @@ class LSTMModel(nn.Module):
                 weight.new_zeros(self.lstm.num_layers, batch_size, self.lstm.hidden_size).to(weight.device))
 
 
-# Instantiate the model
 vocab_size = dataset.vocab_size
-embedding_dim = 256  # Bigger embedding dimension
-hidden_dim = 512  # Bigger hidden dimension
-num_layers = 2  # More layers
+embedding_dim = 128  # Smaller embedding dimension for quick verification
+hidden_dim = 128  # Smaller hidden dimension for quick verification
+num_layers = 1  # Fewer layers for quick verification
 model = LSTMModel(vocab_size, embedding_dim, hidden_dim, num_layers)
 
 
-# Text Generation Function
-def generate_text(model, start_seq, length, temperature=1.0):
-    model.eval()  # Ensure model is in evaluation mode
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model.to(device)
-
-    chars = [char for char in start_seq]
-    input_seq = torch.tensor([dataset.char_to_idx[char] for char in chars], dtype=torch.long).unsqueeze(0).to(device)
-    hidden = model.init_hidden(1)
-    hidden = tuple([each.data for each in hidden])
-
-    for _ in range(length):
-        output, hidden = model(input_seq, hidden)
-        output = output / temperature
-        probs = nn.functional.softmax(output[0, -1], dim=-1).data.cpu()
-        char_idx = torch.multinomial(probs, 1).item()
-        chars.append(dataset.idx_to_char[char_idx])
-        input_seq = torch.tensor([[char_idx]], dtype=torch.long).to(device)
-
-    return ''.join(chars)
-
-
-# Training Function
-def train(model, train_loader, val_loader, num_epochs, learning_rate, print_every=100, patience=5,
+# Training Loop with Early Stopping and wandb Logging
+def train(model, train_loader, val_loader, num_epochs, learning_rate, print_every=10, patience=3,
           checkpoint_dir='checkpoints'):
+    model.train()
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.AdamW(model.parameters(), lr=learning_rate)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -194,19 +194,15 @@ def evaluate(model, val_loader, criterion, device):
     return avg_val_loss
 
 
-# Training Parameters
-num_epochs = 50  # Use more epochs for full training
+num_epochs = 5  # Use fewer epochs for quick verification
 learning_rate = 0.002
-patience = 5
-print_every = 1  # Print and log every epoch
+patience = 3
+print_every = 1  # Print and log every epoch for quick verification
 
-# Define start sequence for text generation
-start_seq = r"\begin{theorem}"
-
-# Start Training
 train(model, train_loader, val_loader, num_epochs, learning_rate, print_every=print_every, patience=patience)
 
-# Generate Final Text
+
+start_seq = r"\begin{theorem}"
 generated_text = generate_text(model, start_seq, 500, temperature=0.5)
 print(generated_text)
 wandb.log({"final_generated_text": wandb.Html(generated_text)})
