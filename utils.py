@@ -22,6 +22,11 @@ def correct_latex_environments(text):
     stack = []
     output_lines = []
 
+    num_corrected_env = 0
+    num_closed_env = 0
+    num_deleted_end = 0
+    flag_deleted = False
+
     for line in text.splitlines():
 
         # Find all begin and end matches in the current line
@@ -42,6 +47,16 @@ def correct_latex_environments(text):
                 correct_environment = stack.pop()
                 corrected_line = f'\\end{{{correct_environment}}}'
                 line = line.replace(match.group(0), corrected_line, 1)
+                num_corrected_env += 1
+
+            else:
+                num_deleted_end += 1
+                flag_deleted = True
+                continue
+
+        if flag_deleted:
+            flag_deleted = False
+            continue
 
         output_lines.append(line)
 
@@ -49,6 +64,7 @@ def correct_latex_environments(text):
     # Closes unclosed environments
     for environment in reversed(stack):
         output_lines.append(f'\\end{{{environment}}}')
+        num_closed_env += 1
 
-    return '\n'.join(output_lines)
+    return '\n'.join(output_lines), num_corrected_env, num_closed_env, num_deleted_end
 
