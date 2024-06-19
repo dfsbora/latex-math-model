@@ -123,8 +123,9 @@ if __name__ == "__main__":
     labels = latex_processor.make_list_labels('labels.txt')
     cites = latex_processor.make_list_cites('cites.txt')
 
+    exit()
 
     eos_counter = LatexFileEOSCounter('data_eos.tex', tokenizer=word_tokenize)
     eos_counter.count_tokens_between_eos()
-    exit()
+
 
