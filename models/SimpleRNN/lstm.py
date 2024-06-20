@@ -105,7 +105,7 @@ def generate_text(model, start_seq, length, temperature=1.0):
         probs = nn.functional.softmax(output[0, -1], dim=-1).data.cpu()
         char_idx = torch.multinomial(probs, 1).item()
         chars.append(dataset.idx_to_char[char_idx])
-        input_seq = torch.tensor([[char_idx]], dtype=torch.long).to(device)
+        input_seq = torch.cat((input_seq, torch.tensor([[char_idx]], dtype=torch.long).to(device)), dim=1)
 
     return ''.join(chars)
 
