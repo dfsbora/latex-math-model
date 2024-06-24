@@ -33,7 +33,90 @@ def mask_formulas(text, masking_word):
 
     return text
 
+
+def process_line(line,masking_word):
+    matches = []
+    for command in latex_commands:
+        matches.extend(re.finditer(command, line))
+    matches.extend(re.finditer(formula_pattern, line))
+
+    # Sort matches by start position
+    matches.sort(key=lambda x: x.start())
+
+    # Replace non-matching words with "TEXT"
+    result = []
+    last_end = 0
+    for match in matches:
+        start, end = match.span()
+        if last_end < start:
+            # Process the text between matches
+            non_matching_text = line[last_end:start]
+            # Split the text by spaces
+            words = non_matching_text.split()
+            # Replace words with "TEXT"
+            result.extend([masking_word] * len(words))
+        # Append the matched LaTeX command or formula
+        result.append(match.group())
+        last_end = end
+
+    # Process any remaining text after the last match
+    if last_end < len(line):
+        non_matching_text = line[last_end:]
+        words = non_matching_text.split()
+        result.extend([masking_word] * len(words))
+
+    # Remove consecutive "TEXT" entries
+    final_result = []
+    prev_was_text = False
+    for part in result:
+        if part == masking_word:
+            if not prev_was_text:
+                final_result.append(part)
+            prev_was_text = True
+        else:
+            final_result.append(part)
+            prev_was_text = False
+
+    # Join the final result into a string
+    return ' '.join(final_result)
+
+
+latex_commands = [
+    r'\\cite\{[^}]*\}', r'\\begin\{[^}]*\}', r'\\end\{[^}]*\}', r'\\section\{[^}]*\}',
+    r'\\subsection\{[^}]*\}', r'\\textbf\{[^}]*\}', r'\\textit\{[^}]*\}', r'\\underline\{[^}]*\}',
+    r'\\item', r'\\includegraphics\{[^}]*\}', r'\\ref\{[^}]*\}', r'\\label\{[^}]*\}'
+]
+
+# Regular expression for formulas enclosed in $
+formula_pattern = r'\$[^$]*?\$'
+
 def mask_text(text, masking_word):
+
+    output_lines = []
+    flag_formula = False
+
+    for line in text.splitlines():
+        stripped_line = line.strip()
+
+        #Begin and end of formula
+        if stripped_line == "$$":
+            output_lines.append(line)
+            flag_formula = not flag_formula
+
+        #Copy whole formula
+        elif flag_formula:
+            output_lines.append(line)
+
+        else:
+
+            processed_line = process_line(line,masking_word)
+            output_lines.append(processed_line)
+    return '\n'.join(output_lines)
+
+
+
+
+def mask_textold(text, masking_word):
     """
     Masks non-latex lines or non-latex parts of a line
 
