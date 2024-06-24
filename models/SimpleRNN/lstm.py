@@ -60,8 +60,8 @@ dataset = LaTeXDataset(filepaths)
 train_size = int(0.8 * len(dataset))
 val_size = len(dataset) - train_size
 train_dataset, val_dataset = random_split(dataset, [train_size, val_size])
-train_loader = DataLoader(train_dataset, batch_size=16, shuffle=True, collate_fn=collate_fn)
-val_loader = DataLoader(val_dataset, batch_size=16, shuffle=False, collate_fn=collate_fn)
+train_loader = DataLoader(train_dataset, batch_size=64, shuffle=True, collate_fn=collate_fn)
+val_loader = DataLoader(val_dataset, batch_size=64, shuffle=False, collate_fn=collate_fn)
 
 
 # Text Generation
@@ -286,9 +286,9 @@ def evaluate(model, val_loader, criterion, device):
     return avg_val_loss, perplexity, bleu_score
 
 
-num_epochs = 5  # Use fewer epochs for quick verification
+num_epochs = 50  # Use fewer epochs for quick verification
 learning_rate = 0.002
-patience = 3
+patience = 5
 print_every = 1  # Print and log every epoch
 
 train(model, train_loader, val_loader, num_epochs, learning_rate, patience=patience)
