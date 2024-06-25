@@ -245,7 +245,6 @@ def train(model, train_loader, val_loader, num_epochs, learning_rate, print_ever
 def evaluate(model, val_loader, criterion, device):
     model.eval()  # Ensure model is in evaluation mode
     running_loss = 0.0
-    total_ppl = 0
     total_bleu = 0
     smoothing = SmoothingFunction().method1
 
@@ -261,8 +260,8 @@ def evaluate(model, val_loader, criterion, device):
 
             # Perplexity
             log_probs = nn.functional.log_softmax(output, dim=-1)
-            batch_ppl = torch.exp(-log_probs)
-            total_ppl += batch_ppl.mean().item()
+            # batch_ppl = torch.exp(-log_probs)
+            # total_ppl += batch_ppl.mean().item()
 
             # BLEU Score
             decoded_preds = torch.argmax(log_probs, dim=-1)
@@ -281,10 +280,9 @@ def evaluate(model, val_loader, criterion, device):
                     total_bleu += sentence_bleu([target_text], pred_text, smoothing_function=smoothing)
 
     avg_val_loss = running_loss / len(val_loader)
-    perplexity = total_ppl / len(val_loader)
+    perplexity = math.exp(avg_val_loss)  # Correct perplexity calculation
     bleu_score = total_bleu / len(val_loader)
     return avg_val_loss, perplexity, bleu_score
-
 
 num_epochs = 50  # Use fewer epochs for quick verification
 learning_rate = 0.002
