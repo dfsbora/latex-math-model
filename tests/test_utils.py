@@ -23,6 +23,7 @@ class TestEvaluatePrompt(unittest.TestCase):
         This is a sample text with some citations and labels.
         Here is one citation: \cite{cite1} and another one: \cite{cite4}.
         Here is a label: \label{label1} and another one: \label{label4}.
+        And here is an existing reference \ref{label1} and another that does not \ref{nolabel}
         """
 
         self.evaluator = EvaluatePrompt(
@@ -61,9 +62,30 @@ class TestEvaluatePrompt(unittest.TestCase):
         self.assertEqual(num_copy, 1)
         self.assertEqual(num_original, 1)
 
+    def test_check_refs_with_prompt_labels(self):
+        num_generated, num_copy, num_original = self.evaluator.check_refs_with_prompt_labels()
+        self.assertEqual(num_generated, 2)
+        self.assertEqual(num_copy, 1)
+        self.assertEqual(num_original, 1)
 
-if __name__ == "__main__":
-    unittest.main()
+    def test_check_valid_formulas_correct_formulas(self):
+        new_text = r"""
+        $(f')^!\mathcal{O}_Y = \omega_{X'/Y}[0]$
+        $R \to R^\wedge \times R_f$
+        $\dim_\delta(Z') = \dim_\delta(Z)$
+        """
+        self.evaluator.set_text(new_text)
+        num_generated, num_valid = self.evaluator.check_valid_formulas()
+        self.assertEqual(num_generated, 3)
+        self.assertEqual(num_valid, 3)
+
+    def test_check_valid_formulas_incorrect_balance(self):
+        new_text = r"$\left( unbalanced example (A+B) * [C-D(E)] \right]$"""
+        self.evaluator.set_text(new_text)
+        num_generated, num_valid = self.evaluator.check_valid_formulas()
+        self.assertEqual(num_generated, 1)
+        self.assertEqual(num_valid, 0)
+
 
 class TestUtils(unittest.TestCase):
     def test_unopened_environment(self):
