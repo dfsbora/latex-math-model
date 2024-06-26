@@ -1,6 +1,6 @@
 import os
 import torch
-from torch.utils.data import Dataset, DataLoader, random_split
+from torch.utils.data import Dataset, random_split
 from transformers import GPT2Tokenizer, GPT2LMHeadModel, Trainer, TrainingArguments, DataCollatorForLanguageModeling, TrainerCallback
 import wandb
 
@@ -93,16 +93,16 @@ training_args = TrainingArguments(
     num_train_epochs=5,
     per_device_train_batch_size=4,
     per_device_eval_batch_size=4,
-    logging_steps=100,
+    logging_steps=50,
     save_steps=500,
     evaluation_strategy="steps",
     eval_steps=500,
     save_total_limit=2,
-    prediction_loss_only=True,
+    prediction_loss_only=False,
     report_to="wandb",
 )
 
-# Initialize Trainer
+# Initialize Trainer with EarlyStoppingCallback
 trainer = Trainer(
     model=model,
     args=training_args,
@@ -114,6 +114,10 @@ trainer = Trainer(
 
 # Start training
 trainer.train()
+
+# Save the best model
+trainer.save_model("./results/final_model")
+tokenizer.save_pretrained("./results/final_model")
 
 
 # Generate example text
