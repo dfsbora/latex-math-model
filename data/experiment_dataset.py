@@ -31,9 +31,9 @@ class LatexFileParser:
         single_matches = set(single_matches)
         with open(output_file_abs, 'w') as out_file:
             for match in double_matches:
-                out_file.write(match + "\n")
+                out_file.write("$$" + match + "$$" + "\n")
             for match in single_matches:
-                out_file.write(match + "\n")
+                out_file.write("$$" + match + "$$" + "\n")
 
         print(f"Found {len(single_matches) + len(double_matches)} unique formulas")
         return double_matches, single_matches

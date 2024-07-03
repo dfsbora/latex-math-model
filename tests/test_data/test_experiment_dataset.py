@@ -1,7 +1,7 @@
 import unittest
 import os
 import tempfile
-from data.data_experiment import LatexFileParser, LatexFileEOSCounter
+from data.experiment_dataset import LatexFileParser, LatexFileEOSCounter
 
 
 
