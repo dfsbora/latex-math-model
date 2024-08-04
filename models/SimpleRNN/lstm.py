@@ -1,20 +1,20 @@
 import os
+import re
+import math
 import torch
+import wandb
+import subprocess
+import tempfile
+from tqdm import tqdm
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader, random_split
 from torch.nn.utils.rnn import pad_sequence
-from tqdm import tqdm
-import wandb
-import math
-import nltk
 from nltk.translate.bleu_score import sentence_bleu, SmoothingFunction
-import subprocess
-import tempfile
-import re
 
 # Initialize wandb
 wandb.init(project="math_latex_project")
+
 
 # Data Preparation and Preprocessing
 class LaTeXDataset(Dataset):
@@ -51,41 +51,6 @@ def collate_fn(batch):
     return inputs, targets
 
 
-# Load data
-data_dir = "data"  # Path to the directory containing LaTeX data
-filepaths = [os.path.join(data_dir, fname) for fname in os.listdir(data_dir) if fname.endswith('.tex')]
-dataset = LaTeXDataset(filepaths)
-
-# Split dataset into training and validation sets
-train_size = int(0.8 * len(dataset))
-val_size = len(dataset) - train_size
-train_dataset, val_dataset = random_split(dataset, [train_size, val_size])
-train_loader = DataLoader(train_dataset, batch_size=64, shuffle=True, collate_fn=collate_fn)
-val_loader = DataLoader(val_dataset, batch_size=64, shuffle=False, collate_fn=collate_fn)
-
-
-# Text Generation
-def generate_text(model, start_seq, length, temperature=1.0):
-    model.eval()
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model.to(device)
-
-    chars = [char for char in start_seq]
-    input_seq = torch.tensor([dataset.char_to_idx[char] for char in chars], dtype=torch.long).unsqueeze(0).to(device)
-    hidden = model.init_hidden(1)
-    hidden = tuple([each.data for each in hidden])
-
-    for _ in range(length):
-        output, hidden = model(input_seq, hidden)
-        output = output / temperature
-        probs = nn.functional.softmax(output[0, -1], dim=-1).data.cpu()
-        char_idx = torch.multinomial(probs, 1).item()
-        chars.append(dataset.idx_to_char[char_idx])
-        input_seq = torch.cat((input_seq, torch.tensor([[char_idx]], dtype=torch.long).to(device)), dim=1)
-
-    return ''.join(chars)
-
-
 # Model Definition
 class LSTMModel(nn.Module):
     def __init__(self, vocab_size, embedding_dim, hidden_dim, num_layers):
@@ -107,11 +72,26 @@ class LSTMModel(nn.Module):
                 weight.new_zeros(self.lstm.num_layers, batch_size, self.lstm.hidden_size).to(weight.device))
 
 
-vocab_size = dataset.vocab_size
-embedding_dim = 256  # Bigger embedding dimension
-hidden_dim = 512  # Bigger hidden dimension
-num_layers = 2  # More layers
-model = LSTMModel(vocab_size, embedding_dim, hidden_dim, num_layers)
+# Text Generation
+def generate_text(model, dataset, start_seq, length, temperature=1.0):
+    model.eval()
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model.to(device)
+
+    chars = [char for char in start_seq]
+    input_seq = torch.tensor([dataset.char_to_idx[char] for char in chars], dtype=torch.long).unsqueeze(0).to(device)
+    hidden = model.init_hidden(1)
+    hidden = tuple([each.data for each in hidden])
+
+    for _ in range(length):
+        output, hidden = model(input_seq, hidden)
+        output = output / temperature
+        probs = nn.functional.softmax(output[0, -1], dim=-1).data.cpu()
+        char_idx = torch.multinomial(probs, 1).item()
+        chars.append(dataset.idx_to_char[char_idx])
+        input_seq = torch.cat((input_seq, torch.tensor([[char_idx]], dtype=torch.long).to(device)), dim=1)
+
+    return ''.join(chars)
 
 
 # Helper function to compile LaTeX and return errors
@@ -147,25 +127,19 @@ def compile_latex(latex_content):
 
     # Clean up the generated files
     os.remove(tex_path)
-    aux_path = tex_path.replace('.tex', '.aux')
-    log_path = tex_path.replace('.tex', '.log')
-    pdf_path = tex_path.replace('.tex', '.pdf')
-    for path in [aux_path, log_path, pdf_path]:
+    for ext in ['.aux', '.log', '.pdf']:
+        path = tex_path.replace('.tex', ext)
         if os.path.exists(path):
             os.remove(path)
 
-    # Count errors and warnings
-    error_count = 0
-    warning_count = 0
-
-    error_count += len(re.findall(r'! LaTeX Error:', stderr)) + len(re.findall(r'! LaTeX Error:', stdout))
-    warning_count += len(re.findall(r'LaTeX Warning:', stderr)) + len(re.findall(r'LaTeX Warning:', stdout))
+    error_count = len(re.findall(r'! LaTeX Error:', stderr)) + len(re.findall(r'! LaTeX Error:', stdout))
+    warning_count = len(re.findall(r'LaTeX Warning:', stderr)) + len(re.findall(r'LaTeX Warning:', stdout))
 
     return stderr if stderr else stdout, error_count, warning_count
 
 
 # Training Loop with Early Stopping and wandb Logging
-def train(model, train_loader, val_loader, num_epochs, learning_rate, print_every=1, patience=3, checkpoint_dir='checkpoints'):
+def train(model, dataset, train_loader, val_loader, num_epochs, learning_rate, patience=3, checkpoint_dir='checkpoints'):
     model.train()
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.AdamW(model.parameters(), lr=learning_rate)
@@ -195,7 +169,7 @@ def train(model, train_loader, val_loader, num_epochs, learning_rate, print_ever
             running_loss += loss.item()
 
         avg_train_loss = running_loss / len(train_loader)
-        val_loss, perplexity, bleu_score = evaluate(model, val_loader, criterion, device)
+        val_loss, perplexity, bleu_score = evaluate(model, dataset, val_loader, criterion, device)
 
         print(f'Epoch {epoch + 1}, Train Loss: {avg_train_loss:.4f}, Val Loss: {val_loss:.4f}, Perplexity: {perplexity:.4f}, BLEU Score: {bleu_score:.4f}')
 
@@ -215,7 +189,7 @@ def train(model, train_loader, val_loader, num_epochs, learning_rate, print_ever
 
         # Generate and compile LaTeX for error logging
         start_seq = r"\begin{theorem}"
-        sampled_text = generate_text(model, start_seq, 500, temperature=0.5)
+        sampled_text = generate_text(model, dataset, start_seq, 500, temperature=0.5)
         print(f'Sampled Text at Epoch {epoch + 1}:\n{sampled_text}')
         wandb.log({"sampled_text": wandb.Html(sampled_text)})
 
@@ -242,7 +216,7 @@ def train(model, train_loader, val_loader, num_epochs, learning_rate, print_ever
 
 
 # Evaluation Function
-def evaluate(model, val_loader, criterion, device):
+def evaluate(model, dataset, val_loader, criterion, device):
     model.eval()  # Ensure model is in evaluation mode
     running_loss = 0.0
     total_bleu = 0
@@ -284,25 +258,56 @@ def evaluate(model, val_loader, criterion, device):
     bleu_score = total_bleu / len(val_loader)
     return avg_val_loss, perplexity, bleu_score
 
-num_epochs = 50  # Use fewer epochs for quick verification
-learning_rate = 0.002
-patience = 5
-print_every = 1  # Print and log every epoch
 
-train(model, train_loader, val_loader, num_epochs, learning_rate, patience=patience)
+def main():
+    ## Small LSTM
+    # batch_size = 16
+    # embedding_dim = 128
+    # hidden_dim = 128
+    # num_layers = 1
+
+    # Load data
+    data_dir = "data"  # Path to the directory containing LaTeX data
+    filepaths = [os.path.join(data_dir, fname) for fname in os.listdir(data_dir) if fname.endswith('.tex')]
+    dataset = LaTeXDataset(filepaths)
+
+    batch_size = 64
+
+    # Split dataset into training and validation sets
+    train_size = int(0.8 * len(dataset))
+    val_size = len(dataset) - train_size
+    train_dataset, val_dataset = random_split(dataset, [train_size, val_size])
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, collate_fn=collate_fn)
+    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, collate_fn=collate_fn)
+
+    vocab_size = dataset.vocab_size
+
+    embedding_dim = 256  # Bigger embedding dimension
+    hidden_dim = 512  # Bigger hidden dimension
+    num_layers = 2  # More layers
+    model = LSTMModel(vocab_size, embedding_dim, hidden_dim, num_layers)
+
+    num_epochs = 50  # Use fewer epochs for quick verification
+    learning_rate = 0.002
+    patience = 5
+
+    train(model, dataset, train_loader, val_loader, num_epochs, learning_rate, patience=patience)
+
+    start_seq = r"\begin{theorem}"
+    generated_text = generate_text(model, dataset, start_seq, 500, temperature=0.5)
+    print(generated_text)
+    wandb.log({"final_generated_text": wandb.Html(generated_text)})
+
+    # Compile the final generated text, count errors, and log them
+    final_compilation_output, final_error_count, final_warning_count = compile_latex(generated_text)
+    print(f'Final Compilation Output:\n{final_compilation_output}')
+    print(f'Final Errors: {final_error_count}, Final Warnings: {final_warning_count}')
+    wandb.log({
+        "final_compilation_output": wandb.Html('<pre>' + final_compilation_output + '</pre>'),
+        "final_errors": final_error_count,
+        "final_warnings": final_warning_count
+    })
 
 
-start_seq = r"\begin{theorem}"
-generated_text = generate_text(model, start_seq, 500, temperature=0.5)
-print(generated_text)
-wandb.log({"final_generated_text": wandb.Html(generated_text)})
-
-# Compile the final generated text, count errors, and log them
-final_compilation_output, final_error_count, final_warning_count = compile_latex(generated_text)
-print(f'Final Compilation Output:\n{final_compilation_output}')
-print(f'Final Errors: {final_error_count}, Final Warnings: {final_warning_count}')
-wandb.log({
-    "final_compilation_output": wandb.Html('<pre>' + final_compilation_output + '</pre>'),
-    "final_errors": final_error_count,
-    "final_warnings": final_warning_count
-})
+if __name__ == "__main__":
+    main()
