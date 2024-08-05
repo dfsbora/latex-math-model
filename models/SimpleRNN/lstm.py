@@ -1,19 +1,17 @@
+import math
 import os
 import re
-import math
-import torch
-import wandb
 import subprocess
 import tempfile
-from tqdm import tqdm
+
+import torch
 import torch.nn as nn
 import torch.optim as optim
-from torch.utils.data import Dataset, DataLoader, random_split
-from torch.nn.utils.rnn import pad_sequence
+import wandb
 from nltk.translate.bleu_score import sentence_bleu, SmoothingFunction
-
-# Initialize wandb
-wandb.init(project="math_latex_project")
+from torch.nn.utils.rnn import pad_sequence
+from torch.utils.data import Dataset, DataLoader, random_split
+from tqdm import tqdm
 
 
 # Data Preparation and Preprocessing
@@ -260,6 +258,9 @@ def evaluate(model, dataset, val_loader, criterion, device):
 
 
 def main():
+    # Initialize wandb for tracking experiments
+    wandb.init(project="math_latex_project")
+
     ## Small LSTM
     # batch_size = 16
     # embedding_dim = 128
@@ -307,6 +308,9 @@ def main():
         "final_errors": final_error_count,
         "final_warnings": final_warning_count
     })
+
+    # Finish the wandb run
+    wandb.finish()
 
 
 if __name__ == "__main__":

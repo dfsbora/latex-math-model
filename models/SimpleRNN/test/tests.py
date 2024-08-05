@@ -1,5 +1,6 @@
-import unittest
 import os
+import unittest
+
 import torch
 
 from models.SimpleRNN.lstm import LaTeXDataset, LSTMModel, generate_text, compile_latex
