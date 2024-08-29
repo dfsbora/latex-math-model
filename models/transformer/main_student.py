@@ -10,6 +10,18 @@ from torch.utils.data import DataLoader, Dataset, random_split
 from tqdm import tqdm
 from transformers import GPT2Tokenizer, GPT2LMHeadModel
 
+# Evaluation metrics functions
+from evaluate_metrics import (
+    calculate_perplexity,
+    calculate_bleu_score,
+    calculate_rouge_score,
+    calculate_token_accuracy,
+    calculate_f1_score,
+    measure_inference_speed,
+    import compile_latex,
+    log_metrics
+)
+
 
 class LatexDataset(Dataset):
     def __init__(self, directory, tokenizer):
@@ -256,11 +268,30 @@ def train(student_model, teacher_model, dataset, train_dataloader, val_dataloade
         print(f"Epoch {epoch + 1}, Validation Loss: {avg_val_loss}")
         wandb.log({"epoch": epoch + 1, "validation_loss": avg_val_loss})
 
+        # Calculate evaluation metrics
+        perplexity = calculate_perplexity(avg_val_loss)
+        generated_text = student_model.generate_text(tokenizer, dataset, device, max_length=512)
+        reference_text = dataset[0]['input_ids'].squeeze(0).to(device)  # Assuming the reference text is the first input
+        reference_text_decoded = tokenizer.decode(reference_text.tolist(), skip_special_tokens=True)
+        bleu_score = calculate_bleu_score(reference_text_decoded, generated_text)
+        rouge_score = calculate_rouge_score(reference_text_decoded, generated_text)
+
+        predicted_tokens = student_logits.argmax(dim=-1).view(-1)
+        ground_truth_tokens = teacher_targets
+        token_accuracy = calculate_token_accuracy(predicted_tokens, ground_truth_tokens)
+        f1_score = calculate_f1_score(predicted_tokens.cpu().numpy(), ground_truth_tokens.cpu().numpy())
+
+        # Measure inference speed
+        inference_time = measure_inference_speed(student_model, tokenizer, dataset, device)
+
+        log_metrics(epoch, avg_loss, avg_val_loss, perplexity, bleu_score, rouge_score, token_accuracy, f1_score, inference_time)
+
         # Save checkpoint
         checkpoint_path = os.path.join(checkpoint_dir, f"model_epoch_{epoch + 1}.pt")
         torch.save(student_model.state_dict(), checkpoint_path)
 
         # Sample generated text
+        # Inside the training loop, after sample generated text
         if (epoch + 1) % sample_interval == 0:
             student_model.eval()
             with torch.no_grad():
@@ -269,11 +300,19 @@ def train(student_model, teacher_model, dataset, train_dataloader, val_dataloade
                 print(f"Sample generated text at epoch {epoch + 1}:\n{generated_text_samples}")
                 wandb.log({"sample_text": wandb.Html(f"<pre>{generated_text_samples}</pre>")})
 
+                # Compile the generated text, count errors, and log them
+                compilation_output, error_count, warning_count = compile_latex(generated_text_samples)
+                print(f'Compilation Output at Epoch {epoch + 1}:\n{compilation_output}')
+                print(f'Errors: {error_count}, Warnings: {warning_count}')
+                wandb.log({
+                    "latex_error_count": error_count,
+                    "latex_warning_count": warning_count
+                })
+
     # Save the final model
     final_model_path = os.path.join(checkpoint_dir, "final_model.pt")
     torch.save(student_model.state_dict(), final_model_path)
     print("Training completed. Final model saved.")
-
 
 def main():
     # Initialize wandb for tracking experiments
