@@ -10,7 +10,7 @@ from tqdm import tqdm
 import re
 
 # Evaluation metrics functions
-from evaluate_metrics import (
+from models.utils.evaluate_metrics import (
     calculate_perplexity,
     calculate_bleu_score,
     calculate_rouge_score,

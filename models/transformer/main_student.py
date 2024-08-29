@@ -11,14 +11,14 @@ from tqdm import tqdm
 from transformers import GPT2Tokenizer, GPT2LMHeadModel
 
 # Evaluation metrics functions
-from evaluate_metrics import (
+from models.utils.evaluate_metrics import (
     calculate_perplexity,
     calculate_bleu_score,
     calculate_rouge_score,
     calculate_token_accuracy,
     calculate_f1_score,
     measure_inference_speed,
-    import compile_latex,
+    compile_latex,
     log_metrics
 )
 

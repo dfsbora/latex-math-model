@@ -1,18 +1,24 @@
 import math
 import os
-import re
-import subprocess
-import tempfile
-
 import torch
 import torch.nn as nn
 import torch.optim as optim
 import wandb
-from nltk.translate.bleu_score import sentence_bleu, SmoothingFunction
 from torch.nn.utils.rnn import pad_sequence
 from torch.utils.data import Dataset, DataLoader, random_split
 from tqdm import tqdm
 
+# Import evaluation metrics from the utils directory
+from models.utils.evaluate_metrics import (
+    calculate_perplexity,
+    calculate_bleu_score,
+    calculate_rouge_score,
+    calculate_token_accuracy,
+    calculate_f1_score,
+    measure_inference_speed,
+    compile_latex,
+    log_metrics
+)
 
 # Data Preparation and Preprocessing
 class LaTeXDataset(Dataset):
@@ -41,13 +47,11 @@ class LaTeXDataset(Dataset):
         y = torch.tensor([self.char_to_idx[char] for char in y_str], dtype=torch.long)
         return x, y
 
-
 def collate_fn(batch):
     inputs, targets = zip(*batch)
     inputs = pad_sequence(inputs, batch_first=True, padding_value=0)
     targets = pad_sequence(targets, batch_first=True, padding_value=0)
     return inputs, targets
-
 
 # Model Definition
 class LSTMModel(nn.Module):
@@ -69,7 +73,6 @@ class LSTMModel(nn.Module):
         return (weight.new_zeros(self.lstm.num_layers, batch_size, self.lstm.hidden_size).to(weight.device),
                 weight.new_zeros(self.lstm.num_layers, batch_size, self.lstm.hidden_size).to(weight.device))
 
-
 # Text Generation
 def generate_text(model, dataset, start_seq, length, temperature=1.0):
     model.eval()
@@ -90,51 +93,6 @@ def generate_text(model, dataset, start_seq, length, temperature=1.0):
         input_seq = torch.cat((input_seq, torch.tensor([[char_idx]], dtype=torch.long).to(device)), dim=1)
 
     return ''.join(chars)
-
-
-# Helper function to compile LaTeX and return errors
-def compile_latex(latex_content):
-    # Define the template
-    latex_template = r"""
-    \documentclass{article}
-    \usepackage{amsmath}
-    \usepackage{amsthm}
-    \usepackage{amsfonts}
-    \usepackage{graphicx}
-    \usepackage{hyperref}
-
-    \begin{document}
-
-    %s
-
-    \end{document}
-    """
-
-    # Insert the generated content into the template
-    complete_latex_code = latex_template % latex_content
-
-    with tempfile.NamedTemporaryFile(suffix=".tex", delete=False) as temp_file:
-        tex_path = temp_file.name
-        with open(tex_path, 'w') as f:
-            f.write(complete_latex_code)
-
-    result = subprocess.run(['pdflatex', '-interaction=nonstopmode', tex_path],
-                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    stdout = result.stdout.decode('utf-8')
-    stderr = result.stderr.decode('utf-8')
-
-    # Clean up the generated files
-    os.remove(tex_path)
-    for ext in ['.aux', '.log', '.pdf']:
-        path = tex_path.replace('.tex', ext)
-        if os.path.exists(path):
-            os.remove(path)
-
-    error_count = len(re.findall(r'! LaTeX Error:', stderr)) + len(re.findall(r'! LaTeX Error:', stdout))
-    warning_count = len(re.findall(r'LaTeX Warning:', stderr)) + len(re.findall(r'LaTeX Warning:', stdout))
-
-    return stderr if stderr else stdout, error_count, warning_count
-
 
 # Training Loop with Early Stopping and wandb Logging
 def train(model, dataset, train_loader, val_loader, num_epochs, learning_rate, patience=3, checkpoint_dir='checkpoints'):
@@ -167,16 +125,18 @@ def train(model, dataset, train_loader, val_loader, num_epochs, learning_rate, p
             running_loss += loss.item()
 
         avg_train_loss = running_loss / len(train_loader)
+
+        # Evaluate on validation set
         val_loss, perplexity, bleu_score = evaluate(model, dataset, val_loader, criterion, device)
 
         print(f'Epoch {epoch + 1}, Train Loss: {avg_train_loss:.4f}, Val Loss: {val_loss:.4f}, Perplexity: {perplexity:.4f}, BLEU Score: {bleu_score:.4f}')
 
         # Log to wandb
         wandb.log({
-            "epoch": epoch + 1, 
-            "train_loss": avg_train_loss, 
-            "val_loss": val_loss, 
-            "perplexity": perplexity, 
+            "epoch": epoch + 1,
+            "train_loss": avg_train_loss,
+            "val_loss": val_loss,
+            "perplexity": perplexity,
             "bleu_score": bleu_score
         })
 
@@ -195,7 +155,7 @@ def train(model, dataset, train_loader, val_loader, num_epochs, learning_rate, p
         compilation_output, error_count, warning_count = compile_latex(sampled_text)
         print(f'Compilation Output at Epoch {epoch + 1}:\n{compilation_output}')
         print(f'Errors: {error_count}, Warnings: {warning_count}')
-        
+
         # Log errors and warnings with consistent key
         wandb.log({
             "latex_error_count": error_count,
@@ -212,13 +172,11 @@ def train(model, dataset, train_loader, val_loader, num_epochs, learning_rate, p
                 print("Early stopping triggered")
                 break
 
-
 # Evaluation Function
 def evaluate(model, dataset, val_loader, criterion, device):
     model.eval()  # Ensure model is in evaluation mode
     running_loss = 0.0
     total_bleu = 0
-    smoothing = SmoothingFunction().method1
 
     with torch.no_grad():
         for inputs, targets in val_loader:
@@ -230,13 +188,8 @@ def evaluate(model, dataset, val_loader, criterion, device):
             loss = criterion(output.view(-1, model.vocab_size), targets.view(-1))
             running_loss += loss.item()
 
-            # Perplexity
-            log_probs = nn.functional.log_softmax(output, dim=-1)
-            # batch_ppl = torch.exp(-log_probs)
-            # total_ppl += batch_ppl.mean().item()
-
-            # BLEU Score
-            decoded_preds = torch.argmax(log_probs, dim=-1)
+            # Calculate BLEU score
+            decoded_preds = output.argmax(dim=-1)
             target_sentences = targets.cpu().numpy().tolist()
             pred_sentences = decoded_preds.cpu().numpy().tolist()
 
@@ -249,13 +202,13 @@ def evaluate(model, dataset, val_loader, criterion, device):
                 pred_text = [dataset.idx_to_char[idx] for idx in pred_seq]
 
                 if len(pred_text) > 0 and len(target_text) > 0:
-                    total_bleu += sentence_bleu([target_text], pred_text, smoothing_function=smoothing)
+                    total_bleu += calculate_bleu_score(''.join(target_text), ''.join(pred_text))
 
     avg_val_loss = running_loss / len(val_loader)
-    perplexity = math.exp(avg_val_loss)  # Correct perplexity calculation
+    perplexity = calculate_perplexity(avg_val_loss)
     bleu_score = total_bleu / len(val_loader)
-    return avg_val_loss, perplexity, bleu_score
 
+    return avg_val_loss, perplexity, bleu_score
 
 def main():
     # Initialize wandb for tracking experiments
@@ -267,7 +220,7 @@ def main():
     # hidden_dim = 128
     # num_layers = 1
 
-    # Load data
+    ## Load data
     data_dir = "data"  # Path to the directory containing LaTeX data
     filepaths = [os.path.join(data_dir, fname) for fname in os.listdir(data_dir) if fname.endswith('.tex')]
     dataset = LaTeXDataset(filepaths)
@@ -311,7 +264,6 @@ def main():
 
     # Finish the wandb run
     wandb.finish()
-
 
 if __name__ == "__main__":
     main()
