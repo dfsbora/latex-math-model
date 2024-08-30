@@ -1,11 +1,18 @@
 import os
-
 import torch
 import wandb
 from torch.utils.data import Dataset, random_split
-from transformers import GPT2Tokenizer, GPT2LMHeadModel, Trainer, TrainingArguments, DataCollatorForLanguageModeling, \
-    TrainerCallback
-
+from transformers import GPT2Tokenizer, GPT2LMHeadModel, Trainer, TrainingArguments, DataCollatorForLanguageModeling, TrainerCallback
+from models.utils.evaluate_metrics import (
+    calculate_perplexity,
+    calculate_bleu_score,
+    calculate_rouge_score,
+    calculate_token_accuracy,
+    calculate_f1_score,
+    measure_inference_speed,
+    compile_latex,
+    log_metrics
+)
 
 class LaTeXDataset(Dataset):
     def __init__(self, filepaths, tokenizer, seq_length=128):
@@ -55,17 +62,41 @@ def generate_text(model, tokenizer, start_seq, length=100, temperature=0.5, top_
     return tokenizer.decode(generated[0], skip_special_tokens=True)
 
 
-# Callback for logging with wandb
-class WandbCallback(TrainerCallback):
-    def __init__(self, model, tokenizer):
+# Callback for logging with wandb and custom metrics
+class CustomWandbCallback(TrainerCallback):
+    def __init__(self, model, tokenizer, val_dataset):
         super().__init__()
         self.model = model
         self.tokenizer = tokenizer
+        self.val_dataset = val_dataset
 
-    def on_log(self, args, state, control, logs=None, **kwargs):
-        if state.global_step % args.logging_steps == 0:
-            sample_text = generate_text(self.model, self.tokenizer, r"\begin{theorem}", 500)
-            wandb.log({"sampled_text": wandb.Html(sample_text)})
+    def on_epoch_end(self, args, state, control, **kwargs):
+        # Generate a sample text
+        start_seq = r"\begin{theorem}"
+        generated_text = generate_text(self.model, self.tokenizer, start_seq, 500)
+
+        # Calculate custom metrics
+        sample_idx = 0  # Using the first sample for simplicity
+        reference_text = self.tokenizer.decode(self.val_dataset[sample_idx]['labels'], skip_special_tokens=True)
+        perplexity = calculate_perplexity(state.log_history[-1]["eval_loss"])
+        bleu_score = calculate_bleu_score(reference_text, generated_text)
+        rouge_score = calculate_rouge_score(reference_text, generated_text)
+        token_accuracy = calculate_token_accuracy(
+            torch.tensor(self.val_dataset[sample_idx]['labels']),
+            torch.tensor(self.tokenizer.encode(generated_text, truncation=True, max_length=self.val_dataset[sample_idx]['input_ids'].shape[0]))
+        )
+        f1_score = calculate_f1_score(
+            torch.tensor(self.val_dataset[sample_idx]['labels']).numpy(),
+            torch.tensor(self.tokenizer.encode(generated_text, truncation=True, max_length=self.val_dataset[sample_idx]['input_ids'].shape[0])).numpy()
+        )
+        inference_time = measure_inference_speed(self.model, self.tokenizer, start_seq, device=args.device)
+
+        # Compile LaTeX and get error and warning counts
+        _, error_count, warning_count = compile_latex(generated_text)
+
+        # Log custom metrics
+        log_metrics(state.epoch, state.log_history[-1]["loss"], state.log_history[-1]["eval_loss"], perplexity, bleu_score, rouge_score, token_accuracy, f1_score, inference_time, error_count, warning_count)
+        wandb.log({"sampled_text": wandb.Html(f"<pre>{generated_text}</pre>")})
 
 
 def main():
@@ -107,14 +138,14 @@ def main():
         report_to="wandb",
     )
 
-    # Initialize Trainer with WandbCallback
+    # Initialize Trainer with CustomWandbCallback
     trainer = Trainer(
         model=model,
         args=training_args,
         data_collator=data_collator,
         train_dataset=train_dataset,
         eval_dataset=val_dataset,
-        callbacks=[WandbCallback(model, tokenizer)]
+        callbacks=[CustomWandbCallback(model, tokenizer, val_dataset)]
     )
 
     # Start training

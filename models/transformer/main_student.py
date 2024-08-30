@@ -291,7 +291,6 @@ def train(student_model, teacher_model, dataset, train_dataloader, val_dataloade
         torch.save(student_model.state_dict(), checkpoint_path)
 
         # Sample generated text
-        # Inside the training loop, after sample generated text
         if (epoch + 1) % sample_interval == 0:
             student_model.eval()
             with torch.no_grad():

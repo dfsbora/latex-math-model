@@ -58,8 +58,8 @@ def compile_latex(latex_content):
 
     result = subprocess.run(['pdflatex', '-interaction=nonstopmode', tex_path],
                             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    stdout = result.stdout.decode('utf-8')
-    stderr = result.stderr.decode('utf-8')
+    stdout = result.stdout.decode('latin1')
+    stderr = result.stderr.decode('latin1')
 
     os.remove(tex_path)
     for ext in ['.aux', '.log', '.pdf']:
