@@ -3,6 +3,7 @@ import subprocess
 import os
 import tempfile
 import torch
+import wandb
 
 def calculate_perplexity(loss):
     return torch.exp(torch.tensor(loss))
