@@ -1,7 +1,7 @@
 import os
 import torch
 import wandb
-import argpase
+import argparse
 from torch.utils.data import Dataset, random_split
 from transformers import GPT2Tokenizer, GPT2LMHeadModel, Trainer, TrainingArguments, DataCollatorForLanguageModeling, TrainerCallback
 from models.utils.evaluate_metrics import (
