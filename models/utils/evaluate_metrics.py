@@ -33,6 +33,22 @@ def measure_inference_speed(model, tokenizer, prompt, device, max_length=512):
     inference_time = time.time() - start_time
     return inference_time
 
+def measure_inference_speed_gpt2(model, tokenizer, prompt, device, max_length=512):
+    import time
+
+    model.eval()
+    start_time = time.time()
+
+    # Tokenize the input prompt
+    input_ids = tokenizer.encode(prompt, return_tensors="pt").to(device)
+
+    # Generate text
+    with torch.no_grad():
+        _ = model.generate(input_ids, max_length=max_length)
+
+    inference_time = time.time() - start_time
+    return inference_time
+
 def compile_latex(latex_content):
     latex_template = r"""
     \documentclass{article}

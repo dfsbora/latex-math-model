@@ -10,7 +10,7 @@ from models.utils.evaluate_metrics import (
     calculate_rouge_score,
     calculate_token_accuracy,
     calculate_f1_score,
-    measure_inference_speed,
+    measure_inference_speed_gpt2,
     compile_latex,
     log_metrics
 )
@@ -98,7 +98,7 @@ class CustomWandbCallback(TrainerCallback):
                 torch.tensor(self.val_dataset[sample_idx]['labels']).numpy(),
                 torch.tensor(self.tokenizer.encode(generated_text, truncation=True, max_length=self.val_dataset[sample_idx]['input_ids'].shape[0])).numpy()
             )
-            inference_time = measure_inference_speed(self.model, self.tokenizer, start_seq, device=args.device)
+            inference_time = measure_inference_speed_gpt2(self.model, self.tokenizer, start_seq, device=args.device)
 
             # Compile LaTeX and get error and warning counts
             compilation_output, error_count, warning_count = compile_latex(generated_text)
