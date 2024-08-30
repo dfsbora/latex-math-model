@@ -100,6 +100,11 @@ class CustomWandbCallback(TrainerCallback):
 
 
 def main():
+    # Argument parser to handle the resume_from_checkpoint parameter
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--resume_from_checkpoint", type=str, default=None, help="Path to the checkpoint to resume from")
+    args = parser.parse_args()
+
     # Initialize wandb for tracking experiments
     wandb.init(project="math_latex_project")
 
@@ -148,8 +153,11 @@ def main():
         callbacks=[CustomWandbCallback(model, tokenizer, val_dataset)]
     )
 
-    # Start training
-    trainer.train()
+    # Resume from checkpoint if provided
+    if args.resume_from_checkpoint:
+        trainer.train(resume_from_checkpoint=args.resume_from_checkpoint)
+    else:
+        trainer.train()
 
     # Save the best model
     trainer.save_model("./results/final_model")
