@@ -8,9 +8,25 @@ import wandb
 def calculate_perplexity(loss):
     return torch.exp(torch.tensor(loss))
 
-def calculate_bleu_score(reference_text, generated_text):
+def calculate_bleu_score(reference, hypothesis):
     from nltk.translate.bleu_score import sentence_bleu
-    return sentence_bleu([reference_text.split()], generated_text.split())
+
+    # Ensure the reference and hypothesis are lists of tokens (strings)
+    if isinstance(reference, str):
+        reference_tokens = reference.split()
+    elif isinstance(reference, list):
+        reference_tokens = reference
+    else:
+        raise ValueError("Reference must be a string or a list of tokens")
+
+    if isinstance(hypothesis, str):
+        hypothesis_tokens = hypothesis.split()
+    elif isinstance(hypothesis, list):
+        hypothesis_tokens = hypothesis
+    else:
+        raise ValueError("Hypothesis must be a string or a list of tokens")
+
+    return sentence_bleu([reference_tokens], hypothesis_tokens)
 
 def calculate_rouge_score(reference_text, generated_text):
     from rouge_score import rouge_scorer

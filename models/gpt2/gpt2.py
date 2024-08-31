@@ -51,16 +51,13 @@ def generate_text(model, tokenizer, start_seq, length=100, temperature=0.5, top_
         outputs = model(generated)
         logits = outputs.logits[:, -1, :] / temperature
         probs = torch.nn.functional.softmax(logits, dim=-1)
-        next_token = torch.multinomial(probs, num_samples=1)  # Shape: [batch_size, 1]
+        next_token = torch.multinomial(probs, num_samples=1)
 
-        # Ensure next_token has the correct dimensions
-        next_token = next_token.squeeze(-1)  # Remove the last dimension if it's 1
-        next_token = next_token.unsqueeze(0) if next_token.dim() == 1 else next_token  # Ensure it has the correct batch dimension
-
-        # Concatenate along the sequence length dimension
+        next_token = next_token.squeeze(-1)
         generated = torch.cat((generated, next_token), dim=1)
 
-    return tokenizer.decode(generated[0], skip_special_tokens=True)
+    generated_text = tokenizer.decode(generated[0], skip_special_tokens=True)
+    return generated_text.split()  # Return the generated text as a list of tokens
 
 
 # Callback for logging with wandb and custom metrics
@@ -72,38 +69,35 @@ class CustomWandbCallback(TrainerCallback):
         self.val_dataset = val_dataset
 
     def on_epoch_end(self, args, state, control, **kwargs):
-        # Generate a sample text
         start_seq = r"\begin{theorem}"
-        generated_text = generate_text(self.model, self.tokenizer, start_seq, 500)
+        generated_text_tokens = generate_text(self.model, self.tokenizer, start_seq, 500)
 
-        # Check if "eval_loss" exists in the log history
         eval_loss = None
         for log in reversed(state.log_history):
             if "eval_loss" in log:
                 eval_loss = log["eval_loss"]
-                break  # Exit loop once "eval_loss" is found
+                break
 
         if eval_loss is not None:
-            # Calculate custom metrics
-            sample_idx = 0  # Using the first sample for simplicity
+            sample_idx = 0
             reference_text = self.tokenizer.decode(self.val_dataset[sample_idx]['labels'], skip_special_tokens=True)
+            reference_text_tokens = reference_text.split()
+
             perplexity = calculate_perplexity(eval_loss)
-            bleu_score = calculate_bleu_score(reference_text, generated_text)
-            rouge_score = calculate_rouge_score(reference_text, generated_text)
+            bleu_score = calculate_bleu_score(reference_text_tokens, generated_text_tokens)
+            rouge_score = calculate_rouge_score(reference_text, ' '.join(generated_text_tokens))
             token_accuracy = calculate_token_accuracy(
                 torch.tensor(self.val_dataset[sample_idx]['labels']),
-                torch.tensor(self.tokenizer.encode(generated_text, truncation=True, max_length=self.val_dataset[sample_idx]['input_ids'].shape[0]))
+                torch.tensor(self.tokenizer.encode(' '.join(generated_text_tokens), truncation=True, max_length=self.val_dataset[sample_idx]['input_ids'].shape[0]))
             )
             f1_score = calculate_f1_score(
                 torch.tensor(self.val_dataset[sample_idx]['labels']).numpy(),
-                torch.tensor(self.tokenizer.encode(generated_text, truncation=True, max_length=self.val_dataset[sample_idx]['input_ids'].shape[0])).numpy()
+                torch.tensor(self.tokenizer.encode(' '.join(generated_text_tokens), truncation=True, max_length=self.val_dataset[sample_idx]['input_ids'].shape[0])).numpy()
             )
             inference_time = measure_inference_speed_gpt2(self.model, self.tokenizer, start_seq, device=args.device)
 
-            # Compile LaTeX and get error and warning counts
-            compilation_output, error_count, warning_count = compile_latex(generated_text)
+            compilation_output, error_count, warning_count = compile_latex(' '.join(generated_text_tokens))
 
-            # Log custom metrics and LaTeX compilation results
             log_metrics(state.epoch, state.log_history[-1]["loss"], eval_loss, perplexity, bleu_score, rouge_score, token_accuracy, f1_score, inference_time)
             wandb.log({
                 "latex_error_count": error_count,
@@ -114,7 +108,7 @@ class CustomWandbCallback(TrainerCallback):
         else:
             print("No eval_loss found in log history.")
 
-        wandb.log({"sampled_text": wandb.Html(f"<pre>{generated_text}</pre>")})
+        wandb.log({"sampled_text": wandb.Html(f"<pre>{' '.join(generated_text_tokens)}</pre>")})
 
 def main():
     # Argument parser to handle the resume_from_checkpoint parameter

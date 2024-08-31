@@ -198,11 +198,12 @@ def evaluate(model, dataset, val_loader, criterion, device):
                 target_seq = [i for i in target_seq if i != 0]
                 pred_seq = [i for i in pred_seq if i != 0]
 
+                # Use the tokenized sequences directly
                 target_text = [dataset.idx_to_char[idx] for idx in target_seq]
                 pred_text = [dataset.idx_to_char[idx] for idx in pred_seq]
 
                 if len(pred_text) > 0 and len(target_text) > 0:
-                    total_bleu += calculate_bleu_score(''.join(target_text), ''.join(pred_text))
+                    total_bleu += calculate_bleu_score(target_text, pred_text)
 
     avg_val_loss = running_loss / len(val_loader)
     perplexity = calculate_perplexity(avg_val_loss)
