@@ -42,7 +42,7 @@ class LatexDataset(Dataset):
         data_item = self.data[idx]
         input_ids = data_item['input_ids'].squeeze(0)  # Remove the batch dimension if present
         attention_mask = data_item['attention_mask'].squeeze(0)  # Ensure attention_mask is correctly shaped
-        return {'input_ids': input_ids, 'attention_mask': attention_mask
+        return {'input_ids': input_ids, 'attention_mask': attention_mask}
 
 class PositionalEncoding(nn.Module):
     def __init__(self, d_model, max_len):
