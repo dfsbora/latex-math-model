@@ -169,9 +169,9 @@ def calculate_bleu(predictions, references, tokenizer):
         return 0.0
 
     # Debugging: Print sample predictions and references (only if they exist)
-    for i in range(min(5, len(pred_texts), len(ref_texts))):  # Safeguard to prevent out of range access
-        print(f"Pred: {pred_texts[i]}")
-        print(f"Ref: {ref_texts[i]}")
+#    for i in range(min(5, len(pred_texts), len(ref_texts))):  # Safeguard to prevent out of range access
+#        print(f"Pred: {pred_texts[i]}")
+#        print(f"Ref: {ref_texts[i]}")
 
     # Tokenize the sentences
     pred_tokens = [pred.split() for pred in pred_texts]
@@ -250,6 +250,9 @@ def train(student_model, teacher_model, dataset, train_dataloader, val_dataloade
                                             src_key_padding_mask=src_padding_mask, tgt_key_padding_mask=tgt_padding_mask)
             student_logits = student_outputs.view(-1, vocab_size)
 
+            # Debugging: Print the content of student_logits
+            print(f"student_logits (first few values): {student_logits[:5]}")
+
             teacher_targets = teacher_logits.argmax(dim=-1).view(-1)
             loss = criterion(student_logits, teacher_targets)
             loss.backward()
@@ -260,8 +263,14 @@ def train(student_model, teacher_model, dataset, train_dataloader, val_dataloade
             batch_count += 1
             wandb.log({"batch_loss": loss.item()})
 
+            # Generate predictions from logits
+            predictions_batch = student_logits.argmax(dim=-1).view(inputs.size(0), -1).tolist()
+
+            # Debugging: Print the first few predictions
+            print(f"Predictions batch (first few): {predictions_batch[:5]}")
+
             # Collect predictions and references for corpus-level BLEU score
-            predictions.extend(student_logits.argmax(dim=-1).view(inputs.size(0), -1).tolist())
+            predictions.extend(predictions_batch)
             references.extend(labels.view(inputs.size(0), -1).tolist())
 
         avg_loss = running_loss / len(train_dataloader)
