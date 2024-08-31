@@ -3,6 +3,10 @@ import torch
 import wandb
 import argparse
 import numpy as np
+import time
+import tempfile
+import subprocess
+import re
 from torch.utils.data import Dataset, random_split
 from transformers import GPT2Tokenizer, GPT2LMHeadModel, Trainer, TrainingArguments, DataCollatorForLanguageModeling, TrainerCallback
 from transformers.trainer_utils import EvalPrediction
@@ -33,7 +37,7 @@ class LaTeXDataset(Dataset):
     def __getitem__(self, idx):
         return self.examples[idx]
 
-def generate_text(model, tokenizer, start_seq, length=100, temperature=0.5, top_k=50):
+def generate_text(model, tokenizer, start_seq, length=100, top_k=50):
     model.eval()
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model.to(device)
@@ -41,7 +45,7 @@ def generate_text(model, tokenizer, start_seq, length=100, temperature=0.5, top_
 
     for _ in range(length):
         outputs = model(generated)
-        logits = outputs.logits[:, -1, :] / temperature
+        logits = outputs.logits[:, -1, :] / wandb.config.temperature  # Use temperature from wandb.config
         probs = torch.nn.functional.softmax(logits, dim=-1)
         next_token = torch.multinomial(probs, num_samples=1)
         next_token = next_token.squeeze(-1)
@@ -50,18 +54,77 @@ def generate_text(model, tokenizer, start_seq, length=100, temperature=0.5, top_
 
     return tokenizer.decode(generated[0], skip_special_tokens=True)
 
-# Custom callback to log BLEU and perplexity to wandb
+def compile_latex(latex_content):
+    latex_template = r"""
+    \documentclass{article}
+    \usepackage{amsmath}
+    \usepackage{amsthm}
+    \usepackage{amsfonts}
+    \usepackage{graphicx}
+    \usepackage{hyperref}
+
+    \begin{document}
+
+    %s
+
+    \end{document}
+    """
+
+    complete_latex_code = latex_template % latex_content
+
+    with tempfile.NamedTemporaryFile(suffix=".tex", delete=False) as temp_file:
+        tex_path = temp_file.name
+        with open(tex_path, 'w') as f:
+            f.write(complete_latex_code)
+
+    result = subprocess.run(['pdflatex', '-interaction=nonstopmode', tex_path],
+                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    stdout = result.stdout.decode('latin1')
+    stderr = result.stderr.decode('latin1')
+
+    os.remove(tex_path)
+    for ext in ['.aux', '.log', '.pdf']:
+        path = tex_path.replace('.tex', ext)
+        if os.path.exists(path):
+            os.remove(path)
+
+    error_count = len(re.findall(r'! LaTeX Error:', stderr)) + len(re.findall(r'! LaTeX Error:', stdout))
+    warning_count = len(re.findall(r'LaTeX Warning:', stderr)) + len(re.findall(r'LaTeX Warning:', stdout))
+
+    return stderr if stderr else stdout, error_count, warning_count
+
+# Custom callback to log BLEU, perplexity, inference speed, and LaTeX errors/warnings to wandb
 class CustomWandbCallback(TrainerCallback):
     def __init__(self, model, tokenizer, eval_dataset):
         super().__init__()
         self.model = model
         self.tokenizer = tokenizer
         self.eval_dataset = eval_dataset
+        self.logging_counter = 0
 
     def on_log(self, args, state, control, logs=None, **kwargs):
         if state.global_step % args.logging_steps == 0:
+            start_time = time.time()
             sample_text = generate_text(self.model, self.tokenizer, r"\begin{theorem}", 500)
-            wandb.log({"sampled_text": wandb.Html(sample_text)})
+            end_time = time.time()
+
+            # Calculate and log inference speed (time taken for generation)
+            inference_time = end_time - start_time
+            wandb.log({
+                "sampled_text": wandb.Html(sample_text),
+                "inference_time": inference_time
+            })
+
+            # Increment logging counter
+            self.logging_counter += 1
+
+            # Log LaTeX errors and warnings every 10th logging interval
+            if self.logging_counter % 10 == 0:
+                _, error_count, warning_count = compile_latex(sample_text)
+                wandb.log({
+                    "latex_error_count": error_count,
+                    "latex_warning_count": warning_count
+                })
 
     def on_evaluate(self, args, state, control, metrics, **kwargs):
         # Calculate BLEU score
@@ -85,6 +148,9 @@ def main():
 
     # Initialize wandb for tracking experiments
     wandb.init(project="math_latex_project")
+
+    # Define hyperparameters using wandb.config
+    wandb.config.temperature = 0.5  # Default temperature value
 
     # Directory containing LaTeX data files
     data_dir = "data"
@@ -143,7 +209,7 @@ def main():
 
     # Generate example text
     start_seq = r"\begin{theorem}"
-    generated_text = generate_text(model, tokenizer, start_seq, 500, temperature=0.5)
+    generated_text = generate_text(model, tokenizer, start_seq, 500)
     print(generated_text)
     wandb.log({"final_generated_text": wandb.Html(f"<pre>{generated_text}</pre>")})
 
