@@ -51,13 +51,18 @@ def generate_text(model, tokenizer, start_seq, length=100, temperature=0.5, top_
         outputs = model(generated)
         logits = outputs.logits[:, -1, :] / temperature
         probs = torch.nn.functional.softmax(logits, dim=-1)
-        next_token = torch.multinomial(probs, num_samples=1)
+        next_token = torch.multinomial(probs, num_samples=1)  # Shape: [batch_size, 1]
 
-        next_token = next_token.squeeze(-1)
+        # Ensure next_token has the correct dimensions (batch_size, 1)
+        next_token = next_token.squeeze(-1)  # Remove the last dimension if it's 1
+        next_token = next_token.unsqueeze(-1)  # Add it back to ensure 2D shape (batch_size, 1)
+
+        # Concatenate along the sequence length dimension
         generated = torch.cat((generated, next_token), dim=1)
 
     generated_text = tokenizer.decode(generated[0], skip_special_tokens=True)
     return generated_text.split()  # Return the generated text as a list of tokens
+
 
 
 # Callback for logging with wandb and custom metrics
