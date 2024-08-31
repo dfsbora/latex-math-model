@@ -38,7 +38,7 @@ class LaTeXDataset(Dataset):
         return self.examples[idx]
 
 
-def generate_text(model, tokenizer, start_seq, length=100, top_k=50):
+def generate_text(model, tokenizer, start_seq, length=100, temperature=0.5, top_k=50):
     model.eval()
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model.to(device)
@@ -46,11 +46,15 @@ def generate_text(model, tokenizer, start_seq, length=100, top_k=50):
 
     for _ in range(length):
         outputs = model(generated)
-        logits = outputs.logits[:, -1, :] / wandb.config.temperature  # Use temperature from wandb.config
+        logits = outputs.logits[:, -1, :] / temperature
         probs = torch.nn.functional.softmax(logits, dim=-1)
-        next_token = torch.multinomial(probs, num_samples=1)
-        next_token = next_token.squeeze(-1)
-        next_token = next_token.unsqueeze(0) if next_token.dim() == 1 else next_token
+        next_token = torch.multinomial(probs, num_samples=1)  # Shape: [batch_size, 1]
+
+        # Ensure next_token has the correct dimensions
+        next_token = next_token.squeeze(-1)  # Remove the last dimension if it's 1
+        next_token = next_token.unsqueeze(0) if next_token.dim() == 1 else next_token  # Ensure it has the correct batch dimension
+
+        # Concatenate along the sequence length dimension
         generated = torch.cat((generated, next_token), dim=1)
 
     return tokenizer.decode(generated[0], skip_special_tokens=True)
@@ -128,17 +132,29 @@ class CustomWandbCallback(TrainerCallback):
                 })
 
     def on_evaluate(self, args, state, control, metrics, **kwargs):
-        references = [[self.tokenizer.decode(item['labels'], skip_special_tokens=True).split()] for item in self.eval_dataset]
-        predictions = [generate_text(self.model, self.tokenizer, ref[:50]).split() for ref in references]
+        # Decode references
+        references = [self.tokenizer.decode(item['labels'], skip_special_tokens=True) for item in self.eval_dataset]
+        
+        # Generate predictions using your generate_text function
+        predictions = []
+        for i, ref in enumerate(references):
+            # Generate text for the first 50 tokens of the reference
+            pred = generate_text(self.model, self.tokenizer, ref[:50], length=100, temperature=0.5, top_k=50)
+            predictions.append(pred.split())
 
-        # Calculate corpus-level BLEU
-        avg_bleu_score = corpus_bleu(references, predictions)
+            # Optional: Log progress every 10 sentences
+            if i % 10 == 0:
+                print(f"Generated {i+1}/{len(references)} predictions.")
+
+        # BLEU score calculation
+        list_of_references = [[ref.split()] for ref in references]  # Need list of lists for corpus_bleu
+        avg_bleu_score = corpus_bleu(list_of_references, predictions)
 
         # Calculate perplexity
         eval_loss = metrics["eval_loss"]
         perplexity = torch.exp(torch.tensor(eval_loss))
 
-        # Log BLEU and perplexity to wandb
+        # Log to WandB
         wandb.log({"eval_bleu": avg_bleu_score, "eval_perplexity": perplexity.item()})
 
 
