@@ -2,18 +2,11 @@ import os
 import torch
 import wandb
 import argparse
+import numpy as np
 from torch.utils.data import Dataset, random_split
 from transformers import GPT2Tokenizer, GPT2LMHeadModel, Trainer, TrainingArguments, DataCollatorForLanguageModeling, TrainerCallback
-from models.utils.evaluate_metrics import (
-    calculate_perplexity,
-    calculate_bleu_score,
-    calculate_rouge_score,
-    calculate_token_accuracy,
-    calculate_f1_score,
-    measure_inference_speed_gpt2,
-    compile_latex,
-    log_metrics
-)
+from transformers.trainer_utils import EvalPrediction
+from nltk.translate.bleu_score import sentence_bleu
 
 class LaTeXDataset(Dataset):
     def __init__(self, filepaths, tokenizer, seq_length=128):
@@ -21,17 +14,17 @@ class LaTeXDataset(Dataset):
         self.seq_length = seq_length
         self.examples = self.load_and_tokenize_data(filepaths)
 
-    def load_and_tokenize_data_old(self, filepaths):
+    def load_and_tokenize_data(self, filepaths):
         data = ""
         for filepath in filepaths:
             with open(filepath, 'r', encoding='utf-8') as f:
                 data += f.read()
-        tokens = self.tokenizer.encode(data, return_tensors="pt", truncation=False, padding=False)
-        num_chunks = (tokens.size(1) + self.seq_length - 1) // self.seq_length  # Calculate number of chunks
-        input_ids = tokens[0].new_zeros((num_chunks * self.seq_length,))  # Initialize with padding tokens
-        input_ids[:tokens.size(1)] = tokens[0]  # Copy tokens to the new tensor
+        tokens = self.tokenizer.encode(data, return_tensors="pt", truncation=True, max_length=1024, padding=False)
+        num_chunks = (tokens.size(1) + self.seq_length - 1) // self.seq_length
+        input_ids = tokens[0].new_zeros((num_chunks * self.seq_length,))
+        input_ids[:tokens.size(1)] = tokens[0]
         input_ids = input_ids.view(num_chunks, self.seq_length)
-        labels = input_ids.clone()  # Shifted labels for training
+        labels = input_ids.clone()
         return [{'input_ids': input_ids[i], 'labels': labels[i]} for i in range(len(input_ids))]
 
     def __len__(self):
@@ -39,22 +32,6 @@ class LaTeXDataset(Dataset):
 
     def __getitem__(self, idx):
         return self.examples[idx]
-
-    def load_and_tokenize_data(self, filepaths):
-        data = ""
-        for filepath in filepaths:
-            with open(filepath, 'r', encoding='utf-8') as f:
-                data += f.read()
-        tokens = self.tokenizer.encode(data, return_tensors="pt", truncation=True, max_length=1024, padding=False)
-
-        num_chunks = (tokens.size(1) + self.seq_length - 1) // self.seq_length  # Calculate number of chunks
-        input_ids = tokens[0].new_zeros((num_chunks * self.seq_length,))  # Initialize with padding tokens
-        input_ids[:tokens.size(1)] = tokens[0]  # Copy tokens to the new tensor
-        input_ids = input_ids.view(num_chunks, self.seq_length)
-        labels = input_ids.clone()  # Shifted labels for training
-        return [{'input_ids': input_ids[i], 'labels': labels[i]} for i in range(len(input_ids))]
-
-
 
 def generate_text(model, tokenizer, start_seq, length=100, temperature=0.5, top_k=50):
     model.eval()
@@ -66,71 +43,39 @@ def generate_text(model, tokenizer, start_seq, length=100, temperature=0.5, top_
         outputs = model(generated)
         logits = outputs.logits[:, -1, :] / temperature
         probs = torch.nn.functional.softmax(logits, dim=-1)
-        next_token = torch.multinomial(probs, num_samples=1)  # Shape: [batch_size, 1]
-
-        # Ensure next_token has the correct dimensions (batch_size, 1)
-        next_token = next_token.squeeze(-1)  # Remove the last dimension if it's 1
-        next_token = next_token.unsqueeze(-1)  # Add it back to ensure 2D shape (batch_size, 1)
-
-        # Concatenate along the sequence length dimension
+        next_token = torch.multinomial(probs, num_samples=1)
+        next_token = next_token.squeeze(-1)
+        next_token = next_token.unsqueeze(0) if next_token.dim() == 1 else next_token
         generated = torch.cat((generated, next_token), dim=1)
 
-    generated_text = tokenizer.decode(generated[0], skip_special_tokens=True)
-    token_list = generated_text.split()  # Token list for metrics calculations
-    return generated_text, token_list  # Return both the string and the list of tokens
+    return tokenizer.decode(generated[0], skip_special_tokens=True)
 
-
-
-# Callback for logging with wandb and custom metrics
+# Custom callback to log BLEU and perplexity to wandb
 class CustomWandbCallback(TrainerCallback):
-    def __init__(self, model, tokenizer, val_dataset):
+    def __init__(self, model, tokenizer, eval_dataset):
         super().__init__()
         self.model = model
         self.tokenizer = tokenizer
-        self.val_dataset = val_dataset
+        self.eval_dataset = eval_dataset
 
-    def on_epoch_end(self, args, state, control, **kwargs):
-        start_seq = r"\begin{theorem}"
-        generated_text, generated_text_tokens = generate_text(self.model, self.tokenizer, start_seq, 500)
+    def on_log(self, args, state, control, logs=None, **kwargs):
+        if state.global_step % args.logging_steps == 0:
+            sample_text = generate_text(self.model, self.tokenizer, r"\begin{theorem}", 500)
+            wandb.log({"sampled_text": wandb.Html(sample_text)})
 
-        eval_loss = None
-        for log in reversed(state.log_history):
-            if "eval_loss" in log:
-                eval_loss = log["eval_loss"]
-                break
+    def on_evaluate(self, args, state, control, metrics, **kwargs):
+        # Calculate BLEU score
+        references = [self.tokenizer.decode(item['labels'], skip_special_tokens=True) for item in self.eval_dataset]
+        predictions = [generate_text(self.model, self.tokenizer, ref[:50]) for ref in references]
+        bleu_scores = [sentence_bleu([ref.split()], pred.split()) for ref, pred in zip(references, predictions)]
+        avg_bleu_score = np.mean(bleu_scores)
 
-        if eval_loss is not None:
-            sample_idx = 0
-            reference_text = self.tokenizer.decode(self.val_dataset[sample_idx]['labels'], skip_special_tokens=True)
-            reference_text_tokens = reference_text.split()
+        # Calculate perplexity
+        eval_loss = metrics["eval_loss"]
+        perplexity = torch.exp(torch.tensor(eval_loss))
 
-            perplexity = calculate_perplexity(eval_loss)
-            bleu_score = calculate_bleu_score(reference_text_tokens, generated_text_tokens)
-            rouge_score = calculate_rouge_score(reference_text, generated_text)
-            token_accuracy = calculate_token_accuracy(
-                torch.tensor(self.val_dataset[sample_idx]['labels']),
-                torch.tensor(self.tokenizer.encode(generated_text, truncation=True, max_length=self.val_dataset[sample_idx]['input_ids'].shape[0]))
-            )
-            f1_score = calculate_f1_score(
-                torch.tensor(self.val_dataset[sample_idx]['labels']).numpy(),
-                torch.tensor(self.tokenizer.encode(generated_text, truncation=True, max_length=self.val_dataset[sample_idx]['input_ids'].shape[0])).numpy()
-            )
-            inference_time = measure_inference_speed_gpt2(self.model, self.tokenizer, start_seq, device=args.device)
-
-            compilation_output, error_count, warning_count = compile_latex(generated_text)
-
-            log_metrics(state.epoch, state.log_history[-1]["loss"], eval_loss, perplexity, bleu_score, rouge_score, token_accuracy, f1_score, inference_time)
-            wandb.log({
-                "latex_error_count": error_count,
-                "latex_warning_count": warning_count
-            })
-            print(f'Compilation Output:\n{compilation_output}')
-            print(f'Errors: {error_count}, Warnings: {warning_count}')
-        else:
-            print("No eval_loss found in log history.")
-
-        wandb.log({"sampled_text": wandb.Html(f"<pre>{generated_text}</pre>")})
-
+        # Log BLEU and perplexity to wandb
+        wandb.log({"eval_bleu": avg_bleu_score, "eval_perplexity": perplexity.item()})
 
 def main():
     # Argument parser to handle the resume_from_checkpoint parameter
@@ -204,7 +149,6 @@ def main():
 
     # Finish the wandb run
     wandb.finish()
-
 
 if __name__ == "__main__":
     main()
