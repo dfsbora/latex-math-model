@@ -11,6 +11,7 @@ from torch.utils.data import Dataset, random_split
 from transformers import GPT2Tokenizer, GPT2LMHeadModel, Trainer, TrainingArguments, DataCollatorForLanguageModeling, TrainerCallback
 from transformers.trainer_utils import EvalPrediction
 from nltk.translate.bleu_score import sentence_bleu, corpus_bleu
+import random
 
 class LaTeXDataset(Dataset):
     def __init__(self, filepaths, tokenizer, seq_length=128):
@@ -131,19 +132,23 @@ class CustomWandbCallback(TrainerCallback):
                     "latex_warning_count": warning_count
                 })
 
+
     def on_evaluate(self, args, state, control, metrics, **kwargs):
+        num_samples = min(2000, len(self.eval_dataset)) #eval on random 2k samples
+        eval_indices = random.sample(range(len(self.eval_dataset)), num_samples)
+        eval_subset = [self.eval_dataset[i] for i in eval_indices]
+
         # Decode references
-        references = [self.tokenizer.decode(item['labels'], skip_special_tokens=True) for item in self.eval_dataset]
-        
+        references = [self.tokenizer.decode(item['labels'], skip_special_tokens=True) for item in eval_subset]
+
         # Generate predictions using your generate_text function
         predictions = []
         for i, ref in enumerate(references):
-            # Generate text for the first 50 tokens of the reference
-            pred = generate_text(self.model, self.tokenizer, ref[:50], length=100, temperature=0.5, top_k=50)
+            pred = generate_text(self.model, self.tokenizer, ref[:50], length=50, temperature=0.5, top_k=50)
             predictions.append(pred.split())
 
-            # Optional: Log progress every 10 sentences
-            if i % 10 == 0:
+            # Log progress every 100 sentences
+            if i % 100 == 0:
                 print(f"Generated {i+1}/{len(references)} predictions.")
 
         # BLEU score calculation
@@ -156,6 +161,8 @@ class CustomWandbCallback(TrainerCallback):
 
         # Log to WandB
         wandb.log({"eval_bleu": avg_bleu_score, "eval_perplexity": perplexity.item()})
+        print("Evaluation completed and logged.")
+
 
 
 def main():
@@ -172,7 +179,8 @@ def main():
 
     # Directory containing LaTeX data files
     data_dir = "data"
-    filepaths = [os.path.join(data_dir, fname) for fname in os.listdir(data_dir) if fname.endswith('.tex')]
+    #filepaths = [os.path.join(data_dir, fname) for fname in os.listdir(data_dir) if fname.endswith('.tex')]
+    filepaths = [os.path.join(data_dir, "data.tex")]
     tokenizer = GPT2Tokenizer.from_pretrained('gpt2')
     tokenizer.pad_token = tokenizer.eos_token  # Set padding token
 
