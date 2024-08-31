@@ -161,14 +161,17 @@ class TransformerModel(nn.Module):
 
 
 def calculate_bleu(predictions, references, tokenizer):
-    # Convert token IDs to text for BLEU score calculation
     pred_texts = [tokenizer.decode(pred, skip_special_tokens=True) for pred in predictions]
     ref_texts = [tokenizer.decode(ref, skip_special_tokens=True) for ref in references]
 
-    # Debugging: Print sample predictions and references
-    for i in range(5):  # Print first 5 samples
+    if not pred_texts or not ref_texts:
+        print("Error: Predictions or references are empty.")
+        return 0.0
+
+    # Debugging: Print sample predictions and references (only if they exist)
+    for i in range(min(5, len(pred_texts), len(ref_texts))):  # Safeguard to prevent out of range access
         print(f"Pred: {pred_texts[i]}")
-        print(f"Ref: {ref_texts[i][0]}")
+        print(f"Ref: {ref_texts[i]}")
 
     # Tokenize the sentences
     pred_tokens = [pred.split() for pred in pred_texts]
@@ -177,7 +180,6 @@ def calculate_bleu(predictions, references, tokenizer):
     # Calculate corpus-level BLEU score
     bleu = corpus_bleu(ref_tokens, pred_tokens)
     return bleu
-
 def calculate_perplexity(loss):
     return torch.exp(loss)
 
