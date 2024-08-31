@@ -217,7 +217,6 @@ def train(model, dataset, train_loader, val_loader, num_epochs, learning_rate, p
 def evaluate(model, dataset, val_loader, criterion, device):
     model.eval()
     running_loss = 0.0
-    total_bleu = 0
     total_tokens = 0
     smoothing = SmoothingFunction().method1
 
@@ -241,21 +240,21 @@ def evaluate(model, dataset, val_loader, criterion, device):
             pred_sentences = decoded_preds.cpu().numpy().tolist()
 
             for target_seq, pred_seq in zip(target_sentences, pred_sentences):
-                target_seq = [i for i in target_seq if i != 0]
-                pred_seq = [i for i in pred_seq if i != 0]
+                target_seq = [i for i in target_seq if i != 0]  # Remove padding
+                pred_seq = [i for i in pred_seq if i != 0]      # Remove padding
 
                 target_text = [dataset.idx_to_char[idx] for idx in target_seq]
                 pred_text = [dataset.idx_to_char[idx] for idx in pred_seq]
 
                 if len(pred_text) > 0 and len(target_text) > 0:
-                    all_references.append([target_text])
-                    all_hypotheses.append(pred_text)
+                    all_references.append([target_text])  # List of list of tokens
+                    all_hypotheses.append(pred_text)      # List of tokens
 
     avg_val_loss = running_loss / total_tokens
     perplexity = math.exp(avg_val_loss)
-    bleu_score = sentence_bleu(all_references, all_hypotheses, smoothing_function=smoothing)
-    return avg_val_loss, perplexity, bleu_score
 
+    bleu_score = corpus_bleu(all_references, all_hypotheses, smoothing_function=smoothing)
+    return avg_val_loss, perplexity, bleu_score
 
 
 def main():
@@ -267,6 +266,8 @@ def main():
     # embedding_dim = 128
     # hidden_dim = 128
     # num_layers = 1
+    # epochs = 5
+    # patience = 3
 
     # Load data
     data_dir = "data"  # Path to the directory containing LaTeX data
@@ -274,7 +275,7 @@ def main():
     #filepaths = [os.path.join(data_dir, fname) for fname in os.listdir(data_dir) if fname.endswith('.tex')]
     dataset = LaTeXDataset(filepaths)
 
-    batch_size = 64
+    batch_size = 16
 
     # Split dataset into training and validation sets
     train_size = int(0.8 * len(dataset))
@@ -285,14 +286,14 @@ def main():
 
     vocab_size = dataset.vocab_size
 
-    embedding_dim = 256  # Bigger embedding dimension
-    hidden_dim = 512  # Bigger hidden dimension
-    num_layers = 2  # More layers
+    embedding_dim = 128  # Bigger embedding dimension
+    hidden_dim = 128  # Bigger hidden dimension
+    num_layers = 1  # More layers
     model = LSTMModel(vocab_size, embedding_dim, hidden_dim, num_layers)
 
-    num_epochs = 50  # Use fewer epochs for quick verification
+    num_epochs = 5  # Use fewer epochs for quick verification
     learning_rate = 0.002
-    patience = 5
+    patience = 3
 
     train(model, dataset, train_loader, val_loader, num_epochs, learning_rate, patience=patience)
 
