@@ -23,12 +23,12 @@ class LaTeXDataset(Dataset):
         for filepath in filepaths:
             with open(filepath, 'r', encoding='utf-8') as f:
                 data += f.read()
-        tokens = self.tokenizer.encode(data, return_tensors="pt", truncation=True, max_length=1024, padding=False)
-        num_chunks = (tokens.size(1) + self.seq_length - 1) // self.seq_length
-        input_ids = tokens[0].new_zeros((num_chunks * self.seq_length,))
-        input_ids[:tokens.size(1)] = tokens[0]
+        tokens = self.tokenizer.encode(data, return_tensors="pt", truncation=False, padding=False)
+        num_chunks = (tokens.size(1) + self.seq_length - 1) // self.seq_length  # Calculate number of chunks
+        input_ids = tokens[0].new_zeros((num_chunks * self.seq_length,))  # Initialize with padding tokens
+        input_ids[:tokens.size(1)] = tokens[0]  # Copy tokens to the new tensor
         input_ids = input_ids.view(num_chunks, self.seq_length)
-        labels = input_ids.clone()
+        labels = input_ids.clone()  # Shifted labels for training
         return [{'input_ids': input_ids[i], 'labels': labels[i]} for i in range(len(input_ids))]
 
     def __len__(self):
@@ -36,6 +36,7 @@ class LaTeXDataset(Dataset):
 
     def __getitem__(self, idx):
         return self.examples[idx]
+
 
 def generate_text(model, tokenizer, start_seq, length=100, top_k=50):
     model.eval()
