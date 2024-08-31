@@ -10,7 +10,7 @@ import re
 from torch.utils.data import Dataset, random_split
 from transformers import GPT2Tokenizer, GPT2LMHeadModel, Trainer, TrainingArguments, DataCollatorForLanguageModeling, TrainerCallback
 from transformers.trainer_utils import EvalPrediction
-from nltk.translate.bleu_score import sentence_bleu
+from nltk.translate.bleu_score import sentence_bleu, corpus_bleu
 
 class LaTeXDataset(Dataset):
     def __init__(self, filepaths, tokenizer, seq_length=128):
@@ -128,11 +128,11 @@ class CustomWandbCallback(TrainerCallback):
                 })
 
     def on_evaluate(self, args, state, control, metrics, **kwargs):
-        # Calculate BLEU score
-        references = [self.tokenizer.decode(item['labels'], skip_special_tokens=True) for item in self.eval_dataset]
-        predictions = [generate_text(self.model, self.tokenizer, ref[:50]) for ref in references]
-        bleu_scores = [sentence_bleu([ref.split()], pred.split()) for ref, pred in zip(references, predictions)]
-        avg_bleu_score = np.mean(bleu_scores)
+        references = [[self.tokenizer.decode(item['labels'], skip_special_tokens=True).split()] for item in self.eval_dataset]
+        predictions = [generate_text(self.model, self.tokenizer, ref[:50]).split() for ref in references]
+
+        # Calculate corpus-level BLEU
+        avg_bleu_score = corpus_bleu(references, predictions)
 
         # Calculate perplexity
         eval_loss = metrics["eval_loss"]
@@ -140,6 +140,7 @@ class CustomWandbCallback(TrainerCallback):
 
         # Log BLEU and perplexity to wandb
         wandb.log({"eval_bleu": avg_bleu_score, "eval_perplexity": perplexity.item()})
+
 
 def main():
     # Argument parser to handle the resume_from_checkpoint parameter
@@ -179,7 +180,7 @@ def main():
         num_train_epochs=5,
         per_device_train_batch_size=4,
         per_device_eval_batch_size=4,
-        logging_steps=50,
+        logging_steps=100,
         save_steps=500,
         evaluation_strategy="steps",
         eval_steps=500,
