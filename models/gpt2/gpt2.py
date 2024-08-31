@@ -134,7 +134,7 @@ class CustomWandbCallback(TrainerCallback):
 
 
     def on_evaluate(self, args, state, control, metrics, **kwargs):
-        num_samples = min(2000, len(self.eval_dataset)) #eval on random 2k samples
+        num_samples = min(1000, len(self.eval_dataset)) #eval on random 1k samples
         eval_indices = random.sample(range(len(self.eval_dataset)), num_samples)
         eval_subset = [self.eval_dataset[i] for i in eval_indices]
 
@@ -204,10 +204,10 @@ def main():
         num_train_epochs=5,
         per_device_train_batch_size=4,
         per_device_eval_batch_size=4,
-        logging_steps=100,
-        save_steps=500,
+        logging_steps=500,
+        save_steps=2000,
         evaluation_strategy="steps",
-        eval_steps=500,
+        eval_steps=2000,
         save_total_limit=2,
         prediction_loss_only=False,
         report_to="wandb",
