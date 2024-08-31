@@ -221,12 +221,10 @@ def measure_inference_speed(student_model, tokenizer, dataset, device, num_sampl
     start_time = time.time()
 
     with torch.no_grad():
-        for i in range(num_samples):
-            # Sample a random prompt from the dataset
+        for i in range(min(num_samples, len(dataset))):  # Ensure we don't go out of bounds
             prompt = dataset[i]['input_ids'].squeeze(0).to(device)[:50]  # Use the first 50 tokens as prompt
             prompt_text = tokenizer.decode(prompt, skip_special_tokens=True)
 
-            # Generate text based on the prompt
             student_model.generate_text(tokenizer, dataset, device, prompt=prompt_text, max_length=max_length)
 
     end_time = time.time()
