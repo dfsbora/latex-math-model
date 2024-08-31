@@ -11,6 +11,7 @@ from torch.optim import AdamW
 from torch.utils.data import DataLoader, Dataset, random_split
 from tqdm import tqdm
 from transformers import GPT2Tokenizer, GPT2LMHeadModel
+from nltk.translate.bleu_score import corpus_bleu
 
 
 class LatexDataset(Dataset):
@@ -162,7 +163,7 @@ class TransformerModel(nn.Module):
 def calculate_bleu(predictions, references, tokenizer):
     # Convert token IDs to text for BLEU score calculation
     pred_texts = [tokenizer.decode(pred, skip_special_tokens=True) for pred in predictions]
-    ref_texts = [[tokenizer.decode(ref, skip_special_tokens=True)] for ref in references]
+    ref_texts = [tokenizer.decode(ref, skip_special_tokens=True) for ref in references]
 
     # Tokenize the sentences
     pred_tokens = [pred.split() for pred in pred_texts]
@@ -171,6 +172,7 @@ def calculate_bleu(predictions, references, tokenizer):
     # Calculate corpus-level BLEU score
     bleu = corpus_bleu(ref_tokens, pred_tokens)
     return bleu
+
 
 def calculate_perplexity(loss):
     return torch.exp(loss)
