@@ -13,27 +13,27 @@ from tqdm import tqdm
 from transformers import GPT2Tokenizer, GPT2LMHeadModel
 from nltk.translate.bleu_score import corpus_bleu
 
-
 class LatexDataset(Dataset):
     def __init__(self, directory, tokenizer):
         self.tokenizer = tokenizer
         self.pad_token_id = self.tokenizer.pad_token_id  # Store pad_token_id for reference
-
-        # Only load the specific file `data.tex`
-        data_file = os.path.join(directory, 'data.tex')
-        self.data = self.load_data(data_file)
+        self.files = [os.path.join(directory, f) for f in os.listdir(directory) if f.endswith('.tex')]
+        self.data = self.load_data()
 
     def preprocess_latex(self, text):
         # Custom preprocessing for LaTeX content
         text = re.sub(r'\\([a-zA-Z]+)', r'\\\1', text)  # Ensure backslashes are correctly tokenized
         return text
 
-    def load_data(self, file):
-        with open(file, 'r') as f:
-            content = f.read()
-            content = self.preprocess_latex(content)
-            tokenized = self.tokenizer(content, return_tensors='pt', padding='max_length', truncation=True, max_length=512)
-        return [tokenized]  # Wrap in a list to ensure it returns a single item
+    def load_data(self):
+        data = []
+        for file in self.files:
+            with open(file, 'r') as f:
+                content = f.read()
+                content = self.preprocess_latex(content)
+                tokenized = self.tokenizer(content, return_tensors='pt', padding='max_length', truncation=True, max_length=512)
+                data.append(tokenized)
+        return data
 
     def __len__(self):
         return len(self.data)
@@ -337,10 +337,12 @@ def main():
 
     # Prepare dataset
     dataset = LatexDataset("data", tokenizer)
+    train_size = int(0.8 * len(dataset))
+    val_size = len(dataset) - train_size
+    train_dataset, val_dataset = random_split(dataset, [train_size, val_size])
 
-    # Do not split dataset as we have only one file
-    train_dataloader = DataLoader(dataset, batch_size=2, shuffle=True)
-    val_dataloader = DataLoader(dataset, batch_size=2, shuffle=False)
+    train_dataloader = DataLoader(train_dataset, batch_size=2, shuffle=True)
+    val_dataloader = DataLoader(val_dataset, batch_size=2, shuffle=False)
 
     # Load fine-tuned GPT-2 model (teacher)
     teacher_model = GPT2LMHeadModel.from_pretrained('./results/final_model')
