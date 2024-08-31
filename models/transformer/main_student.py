@@ -18,22 +18,23 @@ class LatexDataset(Dataset):
     def __init__(self, directory, tokenizer):
         self.tokenizer = tokenizer
         self.pad_token_id = self.tokenizer.pad_token_id  # Store pad_token_id for reference
-        self.files = [os.path.join(directory, f) for f in os.listdir(directory) if f.endswith('.tex')]
-        self.data = self.load_data()
+
+        # Only load the specific file `data.tex`
+        data_file = os.path.join(directory, 'data.tex')
+        self.data = self.load_data(data_file)
 
     def preprocess_latex(self, text):
         # Custom preprocessing for LaTeX content
         text = re.sub(r'\\([a-zA-Z]+)', r'\\\1', text)  # Ensure backslashes are correctly tokenized
         return text
 
-    def load_data(self):
+    def load_data(self, file):
         data = []
-        for file in self.files:
-            with open(file, 'r') as f:
-                content = f.read()
-                content = self.preprocess_latex(content)
-                tokenized = self.tokenizer(content, return_tensors='pt', padding='max_length', truncation=True, max_length=512)
-                data.append(tokenized)
+        with open(file, 'r') as f:
+            content = f.read()
+            content = self.preprocess_latex(content)
+            tokenized = self.tokenizer(content, return_tensors='pt', padding='max_length', truncation=True, max_length=512)
+            data.append(tokenized)
         return data
 
     def __len__(self):
@@ -44,7 +45,6 @@ class LatexDataset(Dataset):
         input_ids = data_item['input_ids'].squeeze(0)  # Remove the batch dimension if present
         attention_mask = data_item['attention_mask'].squeeze(0)  # Ensure attention_mask is correctly shaped
         return {'input_ids': input_ids, 'attention_mask': attention_mask}
-
 
 class PositionalEncoding(nn.Module):
     def __init__(self, d_model, max_len):
