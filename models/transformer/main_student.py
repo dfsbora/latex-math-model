@@ -165,6 +165,11 @@ def calculate_bleu(predictions, references, tokenizer):
     pred_texts = [tokenizer.decode(pred, skip_special_tokens=True) for pred in predictions]
     ref_texts = [tokenizer.decode(ref, skip_special_tokens=True) for ref in references]
 
+    # Debugging: Print sample predictions and references
+    for i in range(5):  # Print first 5 samples
+        print(f"Pred: {pred_texts[i]}")
+        print(f"Ref: {ref_texts[i][0]}")
+
     # Tokenize the sentences
     pred_tokens = [pred.split() for pred in pred_texts]
     ref_tokens = [[ref.split()] for ref in ref_texts]  # Nested list as corpus_bleu expects a list of references
@@ -172,7 +177,6 @@ def calculate_bleu(predictions, references, tokenizer):
     # Calculate corpus-level BLEU score
     bleu = corpus_bleu(ref_tokens, pred_tokens)
     return bleu
-
 
 def calculate_perplexity(loss):
     return torch.exp(loss)
@@ -216,22 +220,6 @@ def compile_latex(latex_content):
 
     return stderr if stderr else stdout, error_count, warning_count
 
-def measure_inference_speed(student_model, tokenizer, dataset, device, num_samples=100, max_length=50):
-    student_model.eval()
-    start_time = time.time()
-
-    with torch.no_grad():
-        for i in range(min(num_samples, len(dataset))):  # Ensure we don't go out of bounds
-            prompt = dataset[i]['input_ids'].squeeze(0).to(device)[:50]  # Use the first 50 tokens as prompt
-            prompt_text = tokenizer.decode(prompt, skip_special_tokens=True)
-
-            student_model.generate_text(tokenizer, dataset, device, prompt=prompt_text, max_length=max_length)
-
-    end_time = time.time()
-    total_time = end_time - start_time
-    throughput = num_samples / total_time  # Samples processed per second
-
-    return throughput
 
 def train(student_model, teacher_model, dataset, train_dataloader, val_dataloader, vocab_size, tokenizer, device, num_epochs=10, sample_interval=2, checkpoint_dir="checkpoints"):
     criterion = nn.CrossEntropyLoss(ignore_index=dataset.pad_token_id).to(device)
@@ -309,10 +297,6 @@ def train(student_model, teacher_model, dataset, train_dataloader, val_dataloade
         # Calculate and log Perplexity
         perplexity = calculate_perplexity(torch.tensor(avg_val_loss))
         wandb.log({"epoch": epoch + 1, "perplexity": perplexity.item()})
-
-        # Measure and log inference speed
-        inference_speed = measure_inference_speed(student_model, tokenizer, dataset, device, num_samples=100, max_length=50)
-        wandb.log({"epoch": epoch + 1, "inference_speed_samples_per_sec": inference_speed})
 
         # Generate a sample and compile LaTeX, then log errors and warnings
         if (epoch + 1) % sample_interval == 0:
