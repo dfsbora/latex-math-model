@@ -270,7 +270,8 @@ def main():
 
     # Load data
     data_dir = "data"  # Path to the directory containing LaTeX data
-    filepaths = [os.path.join(data_dir, fname) for fname in os.listdir(data_dir) if fname.endswith('.tex')]
+    filepaths = [os.path.join(data_dir, "data.tex")]
+    #filepaths = [os.path.join(data_dir, fname) for fname in os.listdir(data_dir) if fname.endswith('.tex')]
     dataset = LaTeXDataset(filepaths)
 
     batch_size = 64
