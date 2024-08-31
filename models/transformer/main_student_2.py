@@ -1,9 +1,7 @@
 import math
 import os
 import re
-import tempfile
-import time
-import subprocess
+
 import torch
 import torch.nn as nn
 import wandb
@@ -11,29 +9,29 @@ from torch.optim import AdamW
 from torch.utils.data import DataLoader, Dataset, random_split
 from tqdm import tqdm
 from transformers import GPT2Tokenizer, GPT2LMHeadModel
-from nltk.translate.bleu_score import corpus_bleu
 
 
 class LatexDataset(Dataset):
     def __init__(self, directory, tokenizer):
         self.tokenizer = tokenizer
         self.pad_token_id = self.tokenizer.pad_token_id  # Store pad_token_id for reference
-
-        # Only load the specific file `data.tex`
-        data_file = os.path.join(directory, 'data.tex')
-        self.data = self.load_data(data_file)
+        self.files = [os.path.join(directory, f) for f in os.listdir(directory) if f.endswith('.tex')]
+        self.data = self.load_data()
 
     def preprocess_latex(self, text):
         # Custom preprocessing for LaTeX content
         text = re.sub(r'\\([a-zA-Z]+)', r'\\\1', text)  # Ensure backslashes are correctly tokenized
         return text
 
-    def load_data(self, file):
-        with open(file, 'r') as f:
-            content = f.read()
-            content = self.preprocess_latex(content)
-            tokenized = self.tokenizer(content, return_tensors='pt', padding='max_length', truncation=True, max_length=512)
-        return [tokenized]  # Wrap in a list to ensure it returns a single item
+    def load_data(self):
+        data = []
+        for file in self.files:
+            with open(file, 'r') as f:
+                content = f.read()
+                content = self.preprocess_latex(content)
+                tokenized = self.tokenizer(content, return_tensors='pt', padding='max_length', truncation=True, max_length=512)
+                data.append(tokenized)
+        return data
 
     def __len__(self):
         return len(self.data)
@@ -43,6 +41,7 @@ class LatexDataset(Dataset):
         input_ids = data_item['input_ids'].squeeze(0)  # Remove the batch dimension if present
         attention_mask = data_item['attention_mask'].squeeze(0)  # Ensure attention_mask is correctly shaped
         return {'input_ids': input_ids, 'attention_mask': attention_mask}
+
 
 class PositionalEncoding(nn.Module):
     def __init__(self, d_model, max_len):
@@ -158,120 +157,64 @@ class TransformerModel(nn.Module):
         return logits
 
 
-def calculate_bleu(predictions, references, tokenizer):
-    pred_texts = [tokenizer.decode(pred, skip_special_tokens=True) for pred in predictions]
-    ref_texts = [tokenizer.decode(ref, skip_special_tokens=True) for ref in references]
-
-    if not pred_texts or not ref_texts:
-        print("Error: Predictions or references are empty.")
-        return 0.0
-
-    # Debugging: Print sample predictions and references (only if they exist)
-#    for i in range(min(5, len(pred_texts), len(ref_texts))):  # Safeguard to prevent out of range access
-#        print(f"Pred: {pred_texts[i]}")
-#        print(f"Ref: {ref_texts[i]}")
-
-    # Tokenize the sentences
-    pred_tokens = [pred.split() for pred in pred_texts]
-    ref_tokens = [[ref.split()] for ref in ref_texts]  # Nested list as corpus_bleu expects a list of references
-
-    # Calculate corpus-level BLEU score
-    bleu = corpus_bleu(ref_tokens, pred_tokens)
-    return bleu
-def calculate_perplexity(loss):
-    return torch.exp(loss)
-
-def compile_latex(latex_content):
-    latex_template = r"""
-    \documentclass{article}
-    \usepackage{amsmath}
-    \usepackage{amsthm}
-    \usepackage{amsfonts}
-    \usepackage{graphicx}
-    \usepackage{hyperref}
-
-    \begin{document}
-
-    %s
-
-    \end{document}
-    """
-
-    complete_latex_code = latex_template % latex_content
-
-    with tempfile.NamedTemporaryFile(suffix=".tex", delete=False) as temp_file:
-        tex_path = temp_file.name
-        with open(tex_path, 'w') as f:
-            f.write(complete_latex_code)
-
-    result = subprocess.run(['pdflatex', '-interaction=nonstopmode', tex_path],
-                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    stdout = result.stdout.decode('latin1')
-    stderr = result.stderr.decode('latin1')
-
-    os.remove(tex_path)
-    for ext in ['.aux', '.log', '.pdf']:
-        path = tex_path.replace('.tex', ext)
-        if os.path.exists(path):
-            os.remove(path)
-
-    error_count = len(re.findall(r'! LaTeX Error:', stderr)) + len(re.findall(r'! LaTeX Error:', stdout))
-    warning_count = len(re.findall(r'LaTeX Warning:', stderr)) + len(re.findall(r'LaTeX Warning:', stdout))
-
-    return stderr if stderr else stdout, error_count, warning_count
-
-
 def train(student_model, teacher_model, dataset, train_dataloader, val_dataloader, vocab_size, tokenizer, device, num_epochs=10, sample_interval=2, checkpoint_dir="checkpoints"):
+    # Define the loss function and optimizer
     criterion = nn.CrossEntropyLoss(ignore_index=dataset.pad_token_id).to(device)
     optimizer = AdamW(student_model.parameters(), lr=0.0001)
+
     os.makedirs(checkpoint_dir, exist_ok=True)
 
     for epoch in range(num_epochs):
         student_model.train()
         running_loss = 0.0
         batch_count = 0
-        predictions, references = [], []
 
         for batch in tqdm(train_dataloader, desc=f"Epoch {epoch + 1}/{num_epochs}"):
             inputs = batch['input_ids'].to(device)
             attention_mask = batch['attention_mask'].to(device)
+
+            # Replace pad_token_id with another valid token ID within the vocabulary range
             inputs[inputs == dataset.pad_token_id] = 0
+
+            # Ensure all token IDs are within the vocabulary range
+            max_input_idx = inputs.max().item()
+            min_input_idx = inputs.min().item()
+            # print(f"inputs shape: {inputs.shape}, max idx: {max_input_idx}, min idx: {min_input_idx}")
+            assert max_input_idx < vocab_size, f"Token ID {max_input_idx} is out of bounds for the vocabulary size {vocab_size}"
+            assert min_input_idx >= 0, f"Token ID {min_input_idx} is negative, which is invalid"
+
             labels = inputs.clone()
             optimizer.zero_grad()
 
+            # Generate outputs from teacher model
             with torch.no_grad():
                 teacher_outputs = teacher_model(inputs, labels=labels)
                 teacher_logits = teacher_outputs.logits
 
+            # Forward pass through the student model
             src_mask, tgt_mask, src_padding_mask, tgt_padding_mask = student_model.create_mask(inputs, inputs)
             student_outputs = student_model(inputs, inputs, src_mask=src_mask, tgt_mask=tgt_mask,
                                             src_key_padding_mask=src_padding_mask, tgt_key_padding_mask=tgt_padding_mask)
             student_logits = student_outputs.view(-1, vocab_size)
 
-            # Debugging: Print the content of student_logits
-            print(f"student_logits (first few values): {student_logits[:5]}")
-
+            # Compute loss with teacher's outputs as targets
             teacher_targets = teacher_logits.argmax(dim=-1).view(-1)
             loss = criterion(student_logits, teacher_targets)
             loss.backward()
+
+            # Gradient clipping
             torch.nn.utils.clip_grad_norm_(student_model.parameters(), max_norm=1.0)
             optimizer.step()
 
             running_loss += loss.item()
             batch_count += 1
+
+            # Log loss for each batch
+            print(f"Batch {batch_count}, Loss: {loss.item()}")
             wandb.log({"batch_loss": loss.item()})
 
-            # Generate predictions from logits
-            predictions_batch = student_logits.argmax(dim=-1).view(inputs.size(0), -1).tolist()
-
-            # Debugging: Print the first few predictions
-            print(f"Predictions batch (first few): {predictions_batch[:5]}")
-
-            # Collect predictions and references for corpus-level BLEU score
-            predictions.extend(predictions_batch)
-            references.extend(labels.view(inputs.size(0), -1).tolist())
-
         avg_loss = running_loss / len(train_dataloader)
+        print(f"Epoch {epoch + 1}, Training Loss: {avg_loss}")
         wandb.log({"epoch": epoch + 1, "training_loss": avg_loss})
 
         # Validation
@@ -281,51 +224,56 @@ def train(student_model, teacher_model, dataset, train_dataloader, val_dataloade
             for batch in tqdm(val_dataloader, desc=f"Validation {epoch + 1}/{num_epochs}"):
                 inputs = batch['input_ids'].to(device)
                 attention_mask = batch['attention_mask'].to(device)
+
+                # Replace pad_token_id with another valid token ID within the vocabulary range
                 inputs[inputs == dataset.pad_token_id] = 0
+
+                # Ensure all token IDs are within the vocabulary range
+                max_input_idx = inputs.max().item()
+                min_input_idx = inputs.min().item()
+                # print(f"inputs shape: {inputs.shape}, max idx: {max_input_idx}, min idx: {min_input_idx}")
+                assert max_input_idx < vocab_size, f"Token ID {max_input_idx} is out of bounds for the vocabulary size {vocab_size}"
+                assert min_input_idx >= 0, f"Token ID {min_input_idx} is negative, which is invalid"
+
                 labels = inputs.clone()
 
+                # Generate outputs from teacher model
                 teacher_outputs = teacher_model(inputs, labels=labels)
                 teacher_logits = teacher_outputs.logits
 
+                # Forward pass through the student model
                 src_mask, tgt_mask, src_padding_mask, tgt_padding_mask = student_model.create_mask(inputs, inputs)
                 student_outputs = student_model(inputs, inputs, src_mask=src_mask, tgt_mask=tgt_mask,
                                                 src_key_padding_mask=src_padding_mask, tgt_key_padding_mask=tgt_padding_mask)
                 student_logits = student_outputs.view(-1, vocab_size)
 
+                # Compute loss with teacher's outputs as targets
                 teacher_targets = teacher_logits.argmax(dim=-1).view(-1)
                 loss = criterion(student_logits, teacher_targets)
                 val_loss += loss.item()
 
         avg_val_loss = val_loss / len(val_dataloader)
+        print(f"Epoch {epoch + 1}, Validation Loss: {avg_val_loss}")
         wandb.log({"epoch": epoch + 1, "validation_loss": avg_val_loss})
-
-        # Calculate and log corpus-level BLEU score
-        bleu = calculate_bleu(predictions, references, tokenizer)
-        wandb.log({"epoch": epoch + 1, "bleu_score": bleu})
-
-        # Calculate and log Perplexity
-        perplexity = calculate_perplexity(torch.tensor(avg_val_loss))
-        wandb.log({"epoch": epoch + 1, "perplexity": perplexity.item()})
-
-        # Generate a sample and compile LaTeX, then log errors and warnings
-        if (epoch + 1) % sample_interval == 0:
-            student_model.eval()
-            with torch.no_grad():
-                prompt = r"\begin{theorem}"
-                generated_text_samples = student_model.generate_text(tokenizer, dataset, device, prompt=prompt, max_length=512, repetition_penalty=1.2)
-                wandb.log({"sample_text": wandb.Html(f"<pre>{generated_text_samples}</pre>")})
-
-                latex_output, error_count, warning_count = compile_latex(generated_text_samples)
-                wandb.log({"epoch": epoch + 1, "latex_errors": error_count, "latex_warnings": warning_count})
-                wandb.log({"latex_output": wandb.Html(f"<pre>{latex_output}</pre>")})
 
         # Save checkpoint
         checkpoint_path = os.path.join(checkpoint_dir, f"model_epoch_{epoch + 1}.pt")
         torch.save(student_model.state_dict(), checkpoint_path)
 
+        # Sample generated text
+        if (epoch + 1) % sample_interval == 0:
+            student_model.eval()
+            with torch.no_grad():
+                prompt = r"\begin{theorem}"
+                generated_text_samples = student_model.generate_text(tokenizer, dataset, device, prompt=prompt, max_length=512, repetition_penalty=1.2)
+                print(f"Sample generated text at epoch {epoch + 1}:\n{generated_text_samples}")
+                wandb.log({"sample_text": wandb.Html(f"<pre>{generated_text_samples}</pre>")})
+
+    # Save the final model
     final_model_path = os.path.join(checkpoint_dir, "final_model.pt")
     torch.save(student_model.state_dict(), final_model_path)
     print("Training completed. Final model saved.")
+
 
 def main():
     # Initialize wandb for tracking experiments
@@ -337,10 +285,12 @@ def main():
 
     # Prepare dataset
     dataset = LatexDataset("data", tokenizer)
+    train_size = int(0.8 * len(dataset))
+    val_size = len(dataset) - train_size
+    train_dataset, val_dataset = random_split(dataset, [train_size, val_size])
 
-    # Do not split dataset as we have only one file
-    train_dataloader = DataLoader(dataset, batch_size=2, shuffle=True)
-    val_dataloader = DataLoader(dataset, batch_size=2, shuffle=False)
+    train_dataloader = DataLoader(train_dataset, batch_size=2, shuffle=True)
+    val_dataloader = DataLoader(val_dataset, batch_size=2, shuffle=False)
 
     # Load fine-tuned GPT-2 model (teacher)
     teacher_model = GPT2LMHeadModel.from_pretrained('./results/final_model')
@@ -358,7 +308,7 @@ def main():
     max_seq_length = 512
     pad_token_id = tokenizer.pad_token_id
 
-    num_epochs = 50
+    num_epochs = 10
     sample_interval = 2  # Sample generated text every 2 epochs
     checkpoint_dir = "checkpoints"
 
@@ -371,6 +321,7 @@ def main():
           num_epochs=num_epochs, sample_interval=sample_interval, checkpoint_dir=checkpoint_dir)
 
     wandb.finish()
+
 
 if __name__ == "__main__":
     main()
