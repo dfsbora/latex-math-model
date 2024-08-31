@@ -29,13 +29,11 @@ class LatexDataset(Dataset):
         return text
 
     def load_data(self, file):
-        data = []
         with open(file, 'r') as f:
             content = f.read()
             content = self.preprocess_latex(content)
             tokenized = self.tokenizer(content, return_tensors='pt', padding='max_length', truncation=True, max_length=512)
-            data.append(tokenized)
-        return data
+        return [tokenized]  # Wrap in a list to ensure it returns a single item
 
     def __len__(self):
         return len(self.data)
@@ -44,7 +42,7 @@ class LatexDataset(Dataset):
         data_item = self.data[idx]
         input_ids = data_item['input_ids'].squeeze(0)  # Remove the batch dimension if present
         attention_mask = data_item['attention_mask'].squeeze(0)  # Ensure attention_mask is correctly shaped
-        return {'input_ids': input_ids, 'attention_mask': attention_mask}
+        return {'input_ids': input_ids, 'attention_mask': attention_mask
 
 class PositionalEncoding(nn.Module):
     def __init__(self, d_model, max_len):
@@ -339,12 +337,10 @@ def main():
 
     # Prepare dataset
     dataset = LatexDataset("data", tokenizer)
-    train_size = int(0.8 * len(dataset))
-    val_size = len(dataset) - train_size
-    train_dataset, val_dataset = random_split(dataset, [train_size, val_size])
 
-    train_dataloader = DataLoader(train_dataset, batch_size=2, shuffle=True)
-    val_dataloader = DataLoader(val_dataset, batch_size=2, shuffle=False)
+    # Do not split dataset as we have only one file
+    train_dataloader = DataLoader(dataset, batch_size=2, shuffle=True)
+    val_dataloader = DataLoader(dataset, batch_size=2, shuffle=False)
 
     # Load fine-tuned GPT-2 model (teacher)
     teacher_model = GPT2LMHeadModel.from_pretrained('./results/final_model')
@@ -375,7 +371,6 @@ def main():
           num_epochs=num_epochs, sample_interval=sample_interval, checkpoint_dir=checkpoint_dir)
 
     wandb.finish()
-
 
 if __name__ == "__main__":
     main()
