@@ -308,11 +308,7 @@ def main():
     max_seq_length = 512
     pad_token_id = tokenizer.pad_token_id
 
-<<<<<<< Updated upstream
     num_epochs = 10
-=======
-    num_epochs = 5
->>>>>>> Stashed changes
     sample_interval = 2  # Sample generated text every 2 epochs
     checkpoint_dir = "checkpoints"
 

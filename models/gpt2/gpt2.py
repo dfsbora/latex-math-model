@@ -65,9 +65,6 @@ class WandbCallback(TrainerCallback):
     def on_log(self, args, state, control, logs=None, **kwargs):
         if state.global_step % args.logging_steps == 0:
             sample_text = generate_text(self.model, self.tokenizer, r"\begin{theorem}", 500)
-<<<<<<< Updated upstream
-            wandb.log({"sampled_text": wandb.Html(sample_text)})
-=======
             end_time = time.time()
 
             # Calculate and log inference speed (time taken for generation)
@@ -119,26 +116,18 @@ class WandbCallback(TrainerCallback):
         wandb.log({"eval_bleu": avg_bleu_score, "eval_perplexity": perplexity.item()})
         print("Evaluation completed and logged.")
 
->>>>>>> Stashed changes
-
 
 def main():
     # Initialize wandb for tracking experiments
     wandb.init(project="math_latex_project")
 
-<<<<<<< Updated upstream
-    # Directory containing LaTeX data files
-    data_dir = "data"
-    filepaths = [os.path.join(data_dir, fname) for fname in os.listdir(data_dir) if fname.endswith('.tex')]
-=======
     # Define hyperparameters using wandb.config
-    wandb.config.temperature = 1 
-
+    wandb.config.temperature = 1
     # Directory containing LaTeX data files
     data_dir = "data"
     filepaths = [os.path.join(data_dir, fname) for fname in os.listdir(data_dir) if fname.endswith('.tex')]
    # filepaths = [os.path.join(data_dir, "data.tex")]
->>>>>>> Stashed changes
+
     tokenizer = GPT2Tokenizer.from_pretrained('gpt2')
     tokenizer.pad_token = tokenizer.eos_token  # Set padding token
 

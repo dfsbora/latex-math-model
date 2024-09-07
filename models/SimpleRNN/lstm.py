@@ -236,10 +236,10 @@ def train(model, dataset, train_loader, val_loader, num_epochs, learning_rate, p
 
         # Log to wandb
         wandb.log({
-            "epoch": epoch + 1, 
-            "train_loss": avg_train_loss, 
-            "val_loss": val_loss, 
-            "perplexity": perplexity, 
+            "epoch": epoch + 1,
+            "train_loss": avg_train_loss,
+            "val_loss": val_loss,
+            "perplexity": perplexity,
             "bleu_score": bleu_score
         })
 
@@ -258,7 +258,7 @@ def train(model, dataset, train_loader, val_loader, num_epochs, learning_rate, p
         compilation_output, error_count, warning_count = compile_latex(sampled_text)
         print(f'Compilation Output at Epoch {epoch + 1}:\n{compilation_output}')
         print(f'Errors: {error_count}, Warnings: {warning_count}')
-        
+
         # Log errors and warnings with consistent key
         wandb.log({
             "latex_error_count": error_count,
@@ -332,10 +332,7 @@ def main():
 
     # Load data
     data_dir = "data"  # Path to the directory containing LaTeX data
-<<<<<<< Updated upstream
-=======
     #filepaths = [os.path.join(data_dir, "data.tex")]
->>>>>>> Stashed changes
     filepaths = [os.path.join(data_dir, fname) for fname in os.listdir(data_dir) if fname.endswith('.tex')]
     dataset = LaTeXDataset(filepaths)
 
@@ -357,21 +354,13 @@ def main():
 
     vocab_size = dataset.vocab_size
 
-<<<<<<< Updated upstream
-    embedding_dim = 256  # Bigger embedding dimension
-    hidden_dim = 512  # Bigger hidden dimension
-    num_layers = 2  # More layers
-    model = LSTMModel(vocab_size, embedding_dim, hidden_dim, num_layers)
 
-    num_epochs = 50  # Use fewer epochs for quick verification
-=======
     embedding_dim = 256
     hidden_dim = 512
     num_layers = 2
     model = LSTMModel(vocab_size, embedding_dim, hidden_dim, num_layers)
 
     num_epochs = 10
->>>>>>> Stashed changes
     learning_rate = 0.002
     patience = 5
 
