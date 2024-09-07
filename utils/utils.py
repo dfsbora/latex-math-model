@@ -337,3 +337,5 @@ if __name__ == "__main__":
     evaluator.set_text(new_text)
     num_generated, num_copy, num_original = evaluator.compare_labels_with_original_labels()
     print(num_generated, num_copy, num_original)
+
+    print(evaluator.run_all())
