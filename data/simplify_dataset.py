@@ -1,3 +1,9 @@
+"""
+Author: Debora
+Description: Performs data simplification
+Section 2.3
+"""
+
 import re
 from collections import Counter
 import argparse

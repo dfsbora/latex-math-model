@@ -1,3 +1,11 @@
+"""
+Author: Rico Bruland
+Modification: Debora
+Description: Creates dataset and dataloader.
+
+Section 2.2: Pads sequences for division of the blocks in the dataset
+"""
+
 import torch
 import nltk
 from nltk.tokenize import word_tokenize

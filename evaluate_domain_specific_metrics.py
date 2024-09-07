@@ -1,9 +1,14 @@
+"""
+Author: Debora
+Description: Performs the domain-specific evaluation over generated prompts saved in a csv file
+Section 4.3, 4.4
+"""
+
 import pandas as pd
 from utils import EvaluatePrompt
 
-
 if __name__ == "__main__":
-    # Provide the path to your CSV file
+
     file_path = 'standard_prompts_output.csv'
     df = pd.read_csv(file_path)
 

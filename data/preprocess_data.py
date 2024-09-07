@@ -1,3 +1,9 @@
+"""
+Author: Debora
+Description: Gets the original dataset and cleans it
+Section 2.1, 2.2
+"""
+
 import os
 import subprocess
 import argparse

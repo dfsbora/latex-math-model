@@ -1,3 +1,9 @@
+"""
+Author: Debora
+Description: Auxiliary functions for training config, latex corrections, and evaluation
+Section 4 - Domain-specific evaluation
+"""
+
 import re
 
 
@@ -255,7 +261,6 @@ class EvaluatePrompt:
                 i += 1
         return not stack
 
-
     def compare_formulas_with_original_formulas(self):
         """
         Compare formulas found in the prompt text with original formulas.
@@ -315,7 +320,6 @@ class EvaluatePrompt:
         #original irt original data
         results.update(self._calculate_score(self.compare_cites_with_original_cites, 'original_cites'))
         results.update(self._calculate_score(self.compare_labels_with_original_labels, 'original_labels'))
-
 
         return results
 

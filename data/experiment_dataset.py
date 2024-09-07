@@ -1,3 +1,9 @@
+"""
+Author: Debora
+Description: Creates lists from the dataset, evaluate average block size
+Section 2.2
+"""
+
 from nltk.tokenize import word_tokenize
 import numpy as np
 import os
@@ -5,6 +11,7 @@ import matplotlib.pyplot as plt
 import re
 from collections import Counter
 import argparse
+
 
 class LatexFileParser:
     def __init__(self, input_file):
@@ -63,7 +70,6 @@ class LatexFileParser:
         return matches
 
 
-
 class LatexFileEOSCounter:
     def __init__(self, input_file, tokenizer=word_tokenize):
         self.input_file = input_file
@@ -117,7 +123,6 @@ if __name__ == "__main__":
     parser.add_argument('--input_file', type=bool, default='data.tex', help='Original dataset file name.')
     args = parser.parse_args()
 
-
     latex_processor = LatexFileParser('data.tex')
     double_formulas,single_formulas= latex_processor.make_list_formulas('formulas.txt')
     labels = latex_processor.make_list_labels('labels.txt')
@@ -127,5 +132,3 @@ if __name__ == "__main__":
 
     eos_counter = LatexFileEOSCounter('data_eos.tex', tokenizer=word_tokenize)
     eos_counter.count_tokens_between_eos()
-
-
