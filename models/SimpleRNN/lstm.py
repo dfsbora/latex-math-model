@@ -278,10 +278,13 @@ def train(model, dataset, train_loader, val_loader, num_epochs, learning_rate, p
 
 # Evaluation Function
 def evaluate(model, dataset, val_loader, criterion, device):
-    model.eval()  # Ensure model is in evaluation mode
+    model.eval()
     running_loss = 0.0
-    total_bleu = 0
+    total_tokens = 0
     smoothing = SmoothingFunction().method1
+
+    all_references = []
+    all_hypotheses = []
 
     with torch.no_grad():
         for inputs, targets in val_loader:
@@ -291,32 +294,29 @@ def evaluate(model, dataset, val_loader, criterion, device):
             hidden = tuple([each.data for each in hidden])
             output, hidden = model(inputs, hidden)
             loss = criterion(output.view(-1, model.vocab_size), targets.view(-1))
-            running_loss += loss.item()
-
-            # Perplexity
-            log_probs = nn.functional.log_softmax(output, dim=-1)
-            # batch_ppl = torch.exp(-log_probs)
-            # total_ppl += batch_ppl.mean().item()
+            running_loss += loss.item() * targets.size(1)
+            total_tokens += targets.size(1)
 
             # BLEU Score
-            decoded_preds = torch.argmax(log_probs, dim=-1)
+            decoded_preds = torch.argmax(output, dim=-1)
             target_sentences = targets.cpu().numpy().tolist()
             pred_sentences = decoded_preds.cpu().numpy().tolist()
 
             for target_seq, pred_seq in zip(target_sentences, pred_sentences):
-                # Skip padding 0 in targets
-                target_seq = [i for i in target_seq if i != 0]
-                pred_seq = [i for i in pred_seq if i != 0]
+                target_seq = [i for i in target_seq if i != 0]  # Remove padding
+                pred_seq = [i for i in pred_seq if i != 0]      # Remove padding
 
                 target_text = [dataset.idx_to_char[idx] for idx in target_seq]
                 pred_text = [dataset.idx_to_char[idx] for idx in pred_seq]
 
                 if len(pred_text) > 0 and len(target_text) > 0:
-                    total_bleu += sentence_bleu([target_text], pred_text, smoothing_function=smoothing)
+                    all_references.append([target_text])  # List of list of tokens
+                    all_hypotheses.append(pred_text)      # List of tokens
 
-    avg_val_loss = running_loss / len(val_loader)
-    perplexity = math.exp(avg_val_loss)  # Correct perplexity calculation
-    bleu_score = total_bleu / len(val_loader)
+    avg_val_loss = running_loss / total_tokens
+    perplexity = math.exp(avg_val_loss)
+
+    bleu_score = corpus_bleu(all_references, all_hypotheses, smoothing_function=smoothing)
     return avg_val_loss, perplexity, bleu_score
 
 
@@ -329,6 +329,8 @@ def main():
     # embedding_dim = 128
     # hidden_dim = 128
     # num_layers = 1
+    # epochs = 5
+    # patience = 3
 
     # Load data
     data_dir = "data"  # Path to the directory containing LaTeX data
@@ -336,7 +338,7 @@ def main():
     filepaths = [os.path.join(data_dir, fname) for fname in os.listdir(data_dir) if fname.endswith('.tex')]
     dataset = LaTeXDataset(filepaths)
 
-    batch_size = 64
+    batch_size = 16
 
     train_size = int(0.8 * len(dataset))
     val_size = len(dataset) - train_size
@@ -362,7 +364,7 @@ def main():
 
     num_epochs = 10
     learning_rate = 0.002
-    patience = 5
+    patience = 3
 
     train(model, dataset, train_loader, val_loader, num_epochs, learning_rate, patience=patience)
 
