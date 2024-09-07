@@ -1,7 +1,7 @@
 """
 Author: Debora
 Description: Performs the domain-specific evaluation over generated prompts saved in a csv file
-Section 4.3, 4.4
+Section 4.1, 4.2
 """
 
 import pandas as pd
