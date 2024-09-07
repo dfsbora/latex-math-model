@@ -5,7 +5,7 @@ Section 4.1, 4.2
 """
 
 import pandas as pd
-from utils import EvaluatePrompt
+from utils.utils import EvaluatePrompt
 
 if __name__ == "__main__":
 
