@@ -356,7 +356,6 @@ def main():
 
     vocab_size = dataset.vocab_size
 
-
     embedding_dim = 256
     hidden_dim = 512
     num_layers = 2
@@ -364,7 +363,7 @@ def main():
 
     num_epochs = 10
     learning_rate = 0.002
-    patience = 3
+    patience = 5
 
     train(model, dataset, train_loader, val_loader, num_epochs, learning_rate, patience=patience)
 

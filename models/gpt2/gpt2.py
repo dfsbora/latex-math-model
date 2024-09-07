@@ -144,7 +144,7 @@ class CustomWandbCallback(TrainerCallback):
         # Generate predictions using your generate_text function
         predictions = []
         for i, ref in enumerate(references):
-            pred = generate_text(self.model, self.tokenizer, ref[:50], length=50, temperature=0.5, top_k=50)
+            pred = generate_text(self.model, self.tokenizer, ref[:50], length=50, temperature=1, top_k=50)
             predictions.append(pred.split())
 
             # Log progress every 100 sentences
@@ -164,6 +164,7 @@ class CustomWandbCallback(TrainerCallback):
         print("Evaluation completed and logged.")
 
 
+
 def main():
     # Argument parser to handle the resume_from_checkpoint parameter
     parser = argparse.ArgumentParser()
@@ -174,12 +175,12 @@ def main():
     wandb.init(project="math_latex_project")
 
     # Define hyperparameters using wandb.config
-    wandb.config.temperature = 1
+    wandb.config.temperature = 1 
+
     # Directory containing LaTeX data files
     data_dir = "data"
     filepaths = [os.path.join(data_dir, fname) for fname in os.listdir(data_dir) if fname.endswith('.tex')]
    # filepaths = [os.path.join(data_dir, "data.tex")]
-
     tokenizer = GPT2Tokenizer.from_pretrained('gpt2')
     tokenizer.pad_token = tokenizer.eos_token  # Set padding token
 
