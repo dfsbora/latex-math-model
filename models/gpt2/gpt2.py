@@ -65,16 +65,80 @@ class WandbCallback(TrainerCallback):
     def on_log(self, args, state, control, logs=None, **kwargs):
         if state.global_step % args.logging_steps == 0:
             sample_text = generate_text(self.model, self.tokenizer, r"\begin{theorem}", 500)
+<<<<<<< Updated upstream
             wandb.log({"sampled_text": wandb.Html(sample_text)})
+=======
+            end_time = time.time()
+
+            # Calculate and log inference speed (time taken for generation)
+            inference_time = end_time - start_time
+            wandb.log({
+                "sampled_text": wandb.Html(sample_text),
+                "inference_time": inference_time
+            })
+
+            # Increment logging counter
+            self.logging_counter += 1
+
+            # Log LaTeX errors and warnings every 10th logging interval
+            if self.logging_counter % 10 == 0:
+                _, error_count, warning_count = compile_latex(sample_text)
+                wandb.log({
+                    "latex_error_count": error_count,
+                    "latex_warning_count": warning_count
+                })
+
+
+    def on_evaluate(self, args, state, control, metrics, **kwargs):
+        num_samples = min(1000, len(self.eval_dataset)) #eval on random 1k samples
+        eval_indices = random.sample(range(len(self.eval_dataset)), num_samples)
+        eval_subset = [self.eval_dataset[i] for i in eval_indices]
+
+        # Decode references
+        references = [self.tokenizer.decode(item['labels'], skip_special_tokens=True) for item in eval_subset]
+
+        # Generate predictions using your generate_text function
+        predictions = []
+        for i, ref in enumerate(references):
+            pred = generate_text(self.model, self.tokenizer, ref[:50], length=50, temperature=1, top_k=50)
+            predictions.append(pred.split())
+
+            # Log progress every 100 sentences
+            if i % 100 == 0:
+                print(f"Generated {i+1}/{len(references)} predictions.")
+
+        # BLEU score calculation
+        list_of_references = [[ref.split()] for ref in references]  # Need list of lists for corpus_bleu
+        avg_bleu_score = corpus_bleu(list_of_references, predictions)
+
+        # Calculate perplexity
+        eval_loss = metrics["eval_loss"]
+        perplexity = torch.exp(torch.tensor(eval_loss))
+
+        # Log to WandB
+        wandb.log({"eval_bleu": avg_bleu_score, "eval_perplexity": perplexity.item()})
+        print("Evaluation completed and logged.")
+
+>>>>>>> Stashed changes
 
 
 def main():
     # Initialize wandb for tracking experiments
     wandb.init(project="math_latex_project")
 
+<<<<<<< Updated upstream
     # Directory containing LaTeX data files
     data_dir = "data"
     filepaths = [os.path.join(data_dir, fname) for fname in os.listdir(data_dir) if fname.endswith('.tex')]
+=======
+    # Define hyperparameters using wandb.config
+    wandb.config.temperature = 1 
+
+    # Directory containing LaTeX data files
+    data_dir = "data"
+    filepaths = [os.path.join(data_dir, fname) for fname in os.listdir(data_dir) if fname.endswith('.tex')]
+   # filepaths = [os.path.join(data_dir, "data.tex")]
+>>>>>>> Stashed changes
     tokenizer = GPT2Tokenizer.from_pretrained('gpt2')
     tokenizer.pad_token = tokenizer.eos_token  # Set padding token
 

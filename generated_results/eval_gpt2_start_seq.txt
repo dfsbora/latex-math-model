@@ -1,0 +1,356 @@
+Reference Text:
+\begin{proof}
+Let $A' = \text{End}_A(M)$, so $M$ is a left $A'$-module.
+Set $A'' = \text{End}_{A'}(M)$ (the bicommutant of $M$).
+We view $M$ as a right $A''$-module\footnote{This
+means that given $a'' \in A''$ and $m \in M$ we have a product
+$m a'' \in M$. In particular, the multiplication in $A''$
+is the opposite of what you'd get if you wrote elements of $A''$
+as endomorphisms acting on the left.}.
+Let $R : A \to A''$ be the natural homomorphism such that
+$mR(a) = ma$. Then $R$ is injective, since $R(1) = \text{id}_M$
+and $A$ contains no nontrivial two-sided ideal. We claim that $R(M)$
+is a right ideal in $A''$. Namely, $R(m)a'' = R(ma'')$ for $a'' \in A''$
+and $m$ in $M$, because {\it left} multiplication of $M$ by any element $n$
+of $M$ represents an element of $A'$, and so
+$(nm)a'' = n(ma'')$ for all $n$ in $M$.
+Finally, the product ideal $AM$ is a two-sided ideal, and so
+$A = AM$. Thus $R(A) = R(A)R(M)$, so that $R(A)$ is a right ideal in $A''$.
+But $R(A)$ contains the identity element of $A''$, and so $R(A) = A''$.
+\end{proof}
+
+==================================================
+
+
+=== Temperature: 0.5, Sequence Length: 100 ===
+
+Generated Text:
+\begin{theorem}
+\label{theorem-openness-flatness}
+Let $S$ be a scheme. Let $f : X \to Y$ be a morphism of algebraic spaces
+over $S$. Assume $f$ is flat and for every commutative diagram
+$$
+\xymatrix{
+U \ar[d] \ar[r] & V \ar[d] \\
+X \ar[r] & Y
+}
+$$
+BLEU Score: 0.0143
+Perplexity: 1.2730
+
+==================================================
+
+
+=== Temperature: 0.5, Sequence Length: 200 ===
+
+Generated Text:
+\begin{theorem}
+\label{theorem-flat-finite-presentation-flat-along-fibre}
+Let $S$ be a scheme. Let $f : X \to Y$ be a morphism of algebraic spaces
+over $S$. Assume that $f$ is flat and locally of finite presentation.
+Then $f$ is flat if and only if $f'$ is flat and locally of finite presentation.
+\end{theorem}
+
+\begin{proof}
+This is a special case of
+Algebraic Stacks, Lemma \ref{algebraic-lemma-characterize-flat}.
+\end{proof}
+
+\begin{lemma}
+\label{lemma-locally-finite-presentation-flat-permanence}
+Let $f : X \to Y$ be a morphism of algebraic spaces.
+Let $f' : X \to
+BLEU Score: 0.1686
+Perplexity: 1.3362
+
+==================================================
+
+
+=== Temperature: 0.5, Sequence Length: 400 ===
+
+Generated Text:
+\begin{theorem}
+\label{theorem-final-bootstrap}
+Let $S$ be a scheme.
+Let $X$ be an algebraic space over $S$.
+Let $\mathcal{F}$ be a quasi-coherent $\mathcal{O}_X$-module.
+Let $\mathcal{G}$ be a quasi-coherent $\mathcal{O}_X$-module.
+Let $s \in S$.
+Assume
+\begin{enumerate}
+\item $X$ is locally Noetherian,
+\item $\mathcal{F}$ is of finite type,
+\item $\mathcal{G}$ is of finite presentation,
+\item $\mathcal{F}$ is a finite locally free $\mathcal{O}_X$-module of rank $r$
+\end{enumerate}
+then there exists an open covering $S = \bigcup U_i$ such that
+$\mathcal{G}|_{U_i}$ is of finite presentation.
+\end{theorem}
+
+\begin{proof}
+Let $\mathcal{F}$ be a quasi-coherent $\mathcal{O}_X$-module.
+Let $\mathcal{F}$ be a coherent $\mathcal{O}_U$-module.
+Let $\mathcal{G}$ be a coherent $\mathcal{O}_X$-module.
+Then $\mathcal{F}$ is of finite type.
+\end{theorem}
+Let $\mathcal{G}$ be a coherent $\mathcal{O}_X$-module.
+Then $\mathcal{F}$ is coherent as a $\mathcal{O}_X$-module.
+\end{theorem}
+\end{proof}
+BLEU Score: 0.2656
+Perplexity: 1.2967
+
+==================================================
+
+
+=== Temperature: 0.5, Sequence Length: 600 ===
+
+Generated Text:
+\begin{theorem}
+\label{theorem-quasi-compact}
+Let $S$ be a scheme. Let $X$ be an algebraic space over $S$.
+Let $\mathcal{F}$ be a quasi-coherent $\mathcal{O}_X$-module.
+Let $\mathcal{G}$ be a quasi-coherent $\mathcal{O}_X$-module.
+Then $\mathcal{F}$ is quasi-coherent if and only if $H^p(X, \mathcal{G})$
+is quasi-coherent for all $p \in \mathbf{Z}$.
+\end{theorem}
+
+\begin{proof}
+By Lemma \ref{lemma-quasi-coherent-affine-cohomology-zero} it suffices to show that
+$H^p(X, \mathcal{G})$ is quasi-coherent if and only if $H^p(X, \mathcal{F})$ is quasi-coherent for all $p \in \mathbf{Z}$.
+Since $\mathcal{F}$ is quasi-coherent we see that $\mathcal{F}$ is quasi-coherent as a sheaf of $\mathcal{O}_X$-modules.
+Hence this follows from
+Lemma \ref{lemma \ref{lemma-quasi-coherent-affine-cohomology-zero-zero-affine-cohomology-zero}.
+\end{proof}
+
+\begin{lemma}
+\label{lemma-quasi-coherent-affine-cohomology-zero-affine-cohomology-zero}
+Let $X$ be an affine scheme and let $\mathcal{F}^\bullet$ be a bounded below complex of quasi-coherent sheaves
+of $\mathcal{O}_X$-modules. Let $\mathcal{G}^\bullet$ be a bounded below complex of $\mathcal{O}_X$-modules.
+If $\mathcal{F}^\bullet$ is quasi-coherent, then there exists a map of quasi-coherent sheaves
+$\begin{equation}
+\label{equation}
+\label{equation-quasi-coherent-affine-cohomology-zero-affine-cohomology-zero}
+\mathcal{G}
+\longrightarrow
+\text{-module}
+\text{-is-affine-cohomology-zero}
+\end{equation}
+of quasi-coherent sheaves of $\mathcal{O}_X$-modules.
+\
+BLEU Score: 0.2274
+Perplexity: 1.3256
+
+==================================================
+
+
+=== Temperature: 0.7, Sequence Length: 100 ===
+
+Generated Text:
+\begin{theorem}
+\label{theorem-embedding-grothendieck}
+Let $S$ be a scheme. Let $\mathcal{A}$ be a Grothendieck abelian category.
+Let $X$ be a Noetherian algebraic space over $S$. There is a canonical
+isomorphism
+$$
+\text{Ass}_{X/S}(\mathcal{A})
+=
+\text{Ass}_{\text
+BLEU Score: 0.0204
+Perplexity: 1.6533
+
+==================================================
+
+
+=== Temperature: 0.7, Sequence Length: 200 ===
+
+Generated Text:
+\begin{theorem}
+\label{theorem-regular}
+Let $R$ be a ring. Let $f_1, \ldots, f_m \in R$ be
+elements. Then $R$ is a regular ring if and only if $R$ is a regular ring.
+\end{theorem}
+
+\begin{proof}
+Let $M$ be an $R$-module. Let $M' \subset M$ be an $R$-submodule.
+As $M$ is $R$-flat we see that $M'$ is flat over $R$.
+By Lemma \ref{lemma-flat-module-over-fibre-product} we see that $M'$ is flat over $R$.
+Hence $M$ is flat over $R$. By Lemma \ref{lemma-completion-flat} we see that $M$ is flat over $
+BLEU Score: 0.1576
+Perplexity: 1.6214
+
+==================================================
+
+
+=== Temperature: 0.7, Sequence Length: 400 ===
+
+Generated Text:
+\begin{theorem}
+\label{theorem-bondal-van-den-bergh}
+Let $A$ be a Noetherian ring. Let $f \in \mathfrak m$.
+Assume $A$ has a dualizing complex and $f$ is generated by a single
+element. Then there exists an integer $d$ such that for every
+$y \in Y$ and $x \in X$ there exist $n_1, \ldots, n_d \geq 0$
+and any $f \in \mathfrak m$ such that $f^n x \in f^nA$.
+\end{theorem}
+
+\begin{proof}
+We will prove this by induction on $d$. If $d = d_1 + d_2$, then $f^nx = 0$ and
+$f^n y = 0$ is a nonzerodivisor. Hence we may assume $f^n x \in f^nA$. If $d = d_1 + d_2 + d_1d_1d_2$, then
+$f^n y = 0$ is a nonzerodivisor. Hence we get
+$f^n x = 0$ by Lemma \ref{lemma \ref{lemma-n-invert-f-power-ideal-kills-module}.
+For every $n \geq d_1$ we can choose an $x \in \mathfrak m$ such that $f^n y = 0$ in $A$. Then $f^n x = \mathfrak mA$.
+Thus we get a ring map
+$$
+\Omega_{A/\mathfrak m}
+\longrightarrow
+\bigoplus\nolimits_{x\in \text{Weak
+BLEU Score: 0.3253
+Perplexity: 1.9840
+
+==================================================
+
+
+=== Temperature: 0.7, Sequence Length: 600 ===
+
+Generated Text:
+\begin{theorem}[Sketch of proof]
+\label{theorem-S1-S2-S3}
+Let $(A, \mathfrak m)$ be a Noetherian local ring.
+Let $\mathfrak p \subset A$ be a prime ideal.
+Let $S \subset A$ be a multiplicative subset.
+\begin{enumerate}
+\item If $M$ is finite locally free then $S^{-1}M = 0$.
+\item Conversely, if $M$ is finite locally free then $S^{-1}M = 0$.
+\end{enumerate}
+\end{theorem}
+
+\begin{proof}
+Assume $M$ is finite locally free. We have to show that for every prime $\mathfrak p$ there exists a nonzero
+$\mathfrak p$-power torsion module $\mathcal{E}_\mathfrak p$ annihilating $M$.
+By Lemma \ref{lemma-locally-free-rank-1}
+there exists at most one nonzero $\mathfrak p \subset \mathfrak p_0$ such that $M$ annihilates $\mathfrak p$.
+Hence we may assume $M$ is finite locally free.
+Set $S = A[x_1, \ldots, x_r]$. Then $M$ is finite locally free.
+Pick a prime $\mathfrak p \subset \mathfrak q \subset S$ which is a prime with $\mathfrak p \not \subset \mathfrak q$ a prime. 
+Then there exists at most one nonzero
+$\mathfrak p \in \text{Ass}(\mathcal{F}_\mathfrak p)$ which is a nonzero prime
+with $\mathfrak q \not \subset \mathfrak p \subset \mathfrak q$ and $\mathfrak q \not \subset \mathfrak p_0$ is a maximal ideal.
+Then $S$ is finite. Choose any nonzero
+$\mathfrak p \in \text{Ass}(\mathfrak p)$ which is of the form $\mathfrak p$ with $\mathfrak q \subset \mathfrak p \not \subset \mathfrak p$
+and any nonzero prime $\mathfrak p \in V(\mathfrak p)$. 
+(Note that any nonzero $S^{-1} \subset of $\text{Ass}(\mathfrak p)$ is a finite submodule
+of $S^{-1}$, $x_1, \ldots, x_r$.
+BLEU Score: 0.2666
+Perplexity: 1.8740
+
+==================================================
+
+
+=== Temperature: 1.0, Sequence Length: 100 ===
+
+Generated Text:
+\begin{theorem}
+\label{theorem-derived-base-change}
+Let $R \to S$ be a ring map.
+Let $(\omega_S^\bullet, d)$ be a dualizing module.
+\begin{enumerate}
+\item If $S$ is Noetherian, then $d = H^i(S, \mathcal{O}_S)$ is canonical
+as a map of $R$-al
+BLEU Score: 0.0153
+Perplexity: 2.3573
+
+==================================================
+
+
+=== Temperature: 1.0, Sequence Length: 200 ===
+
+Generated Text:
+\begin{theorem}
+\label{theorem-colimit-smooth}
+We have already defined
+$$
+H F \longrightarrow F(0)^\#
+$$
+where $0 \to F(0) : F(k) \to F(k)$ is the initial blowup.
+Namely, by Lemma \ref{lemma-blow-up-fitting-ideal-basics}
+we can find a presentation $S = R[x_1, \ldots, x_r]/(f_1, \ldots, f_r)$
+such that $H^{-1}(C^\bullet \otimes_R \kappa(\mathfrak p)) = 0$.
+Namely, we can take the Chern class
+$$
+H^r(C^\bullet \otimes_R \kappa(\mathfrak p)) = \text{T
+BLEU Score: 0.0951
+Perplexity: 2.7298
+
+==================================================
+
+
+=== Temperature: 1.0, Sequence Length: 400 ===
+
+Generated Text:
+\begin{theorem}
+\label{theorem-complete-devissage}
+Let $f : X \to \Spec(A)$ be a continuous map of topological spaces.
+Let $\mathcal{F}$ be a coherent reflexive $\mathcal{O}_X$-module.
+The filtration
+$$
+0 = \mathcal{F}_1 \supset \ldots \supset \mathcal{F}_k = \emptyset
+$$
+is a universally exact sequence of coherent modules on $X$ of dimension $k + 1$.
+Hence we obtain a canonical short exact sequence
+$$
+\ldots \to 0 \to \mathcal{F}_2 \to \mathcal{F} \to \ldots \to
+\mathcal{F}_m \to \mathcal{F}_1 \to 0 \to A \to 0 \to \ldots
+$$
+First we explain what happens for $\mathcal{F}_{n + m}$ when $X$ is normal.
+\begin{enumerate}
+\item Given $\tau X \subset \mathbf{R}$ with generic point $x \in X$ we get a short exact sequence
+$0 \to \mathcal{F}_1 \to \mathcal{F} \to \ldots \to \mathcal{F}_n \to \mathcal{F}_m \to \mathcal{F}_0 \to 0$ (some details omitted)
+\item given $\tau \leadsto \mathcal{F}_0 \to \ldots \supset \mathcal{F}_\kappa$ with $\mathcal{F}_i \subset \mathcal{F}_k$ finite we have
+BLEU Score: 0.2430
+Perplexity: 2.1328
+
+==================================================
+
+
+=== Temperature: 1.0, Sequence Length: 600 ===
+
+Generated Text:
+\begin{theorem}
+\label{theorem-invariance-uniqueness}
+Let $S$ be a scheme. Let $X$ be a decent algebraic space over $S$.
+\begin{enumerate}
+\item If for every morphism $f : T \to S$ with $T$ locally Noetherian the scheme $X$
+is reduced, then $|f|(|X|) = |f_T|(|X_T|)$.
+\item For every morphism $\varphi : T' \to T$ with $T'$ a scheme,
+the scheme $X_T = T' \times_T T$.
+\end{enumerate}
+\end{theorem}
+
+\begin{proof}
+We check each of the 4 conditions below. 1) there exists a scheme $T'$ and a surjective \'etale morphism $T' \to T$,
+see Properties of Spaces, Lemma
+\ref{spaces-properties-lemma-groupoid-on-field-locally-finite-type}. 2) any scheme $T$ is reduced over $S$ can be assumed unramified
+over $T$, see
+Morphisms, Lemma \ref{morphisms-lemma-base-change-unramified}.
+The right topology on $X_T$ is the category of schemes locally Noetherian and locally Noetherian, see
+Morphisms, Lemma \ref{morphisms-lemma-locally-finite-type-locally-type-locally-type}. This proves (1).
+Sometimes, the point $x \in |X_T|$ can be a generic point of an irreducible component of $T$, hence we
+can retrocompactify in $|X|$ (see Properties of Spaces, Lemma
+\ref{spaces-properties-lemma-topology-points-spec},
+Hence if $T' \to S$ has property $\mathcal{P}$ we can find a reduced closed subscheme $T' \subset |X_{red}|$. Thus set
+and there exists a scheme $U$ and a surjective \'etale morphism $T \to $T' \times_x$ with second
+such that either $f_T$ has property $\mathcal{P}$.
+and there exists a morphism $T \to |X_T|$.
+\end{proof}
+
+
+\begin{proof}
+We first remark below is that if $R$ is empty, then $R$ is representable as desired and so is the middle one.
+This theorem. By
+a scheme $T \to \Spec(k)$ is \'
+BLEU Score: 0.2561
+Perplexity: 2.6765
+
+==================================================
+

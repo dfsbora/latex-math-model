@@ -8,7 +8,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import wandb
-from nltk.translate.bleu_score import sentence_bleu, SmoothingFunction
+from nltk.translate.bleu_score import sentence_bleu, SmoothingFunction, corpus_bleu
 from torch.nn.utils.rnn import pad_sequence
 from torch.utils.data import Dataset, DataLoader, random_split
 from tqdm import tqdm
@@ -34,6 +34,15 @@ class LaTeXDataset(Dataset):
     def __len__(self):
         return len(self.data) - self.seq_length
 
+    def text_to_tensor(self, text):
+            """
+            Converts a string of text into a tensor of character indices.
+
+            :param text: The text string to convert.
+            :return: A tensor of indices corresponding to the characters in the text.
+            """
+            return torch.tensor([self.char_to_idx[char] for char in text], dtype=torch.long)
+
     def __getitem__(self, idx):
         x_str = self.data[idx:idx + self.seq_length]
         y_str = self.data[idx + 1:idx + self.seq_length + 1]
@@ -41,13 +50,67 @@ class LaTeXDataset(Dataset):
         y = torch.tensor([self.char_to_idx[char] for char in y_str], dtype=torch.long)
         return x, y
 
+    def get_text_from_indices(self, indices):
+        """
+        Converts a list of character indices back to a string.
+
+        :param indices: A list or range of character indices.
+        :return: The corresponding text string.
+        """
+        return ''.join([self.idx_to_char[idx] for idx in indices])
+
+
+def extract_text_from_validation(val_dataset, dataset, num_samples=10):
+    """
+    Extracts a specified number of samples from the validation dataset and converts them back to text.
+
+    :param val_dataset: The validation dataset (torch.utils.data.Subset).
+    :param dataset: The full dataset object to map indices to text.
+    :param num_samples: Number of samples to extract from the validation set for reference.
+    :return: List of reference texts.
+    """
+    references = []
+
+    # Ensure we do not exceed the size of the validation set
+    num_samples = min(num_samples, len(val_dataset))
+
+    # Randomly select samples from the validation set
+    indices = torch.randperm(len(val_dataset))[:num_samples].tolist()
+
+    for idx in indices:
+        start_idx = val_dataset.indices[idx]
+
+        # Ensure that the indices do not exceed the dataset's length
+        if start_idx + dataset.seq_length >= len(dataset.data):
+            print(f"Skipping index {start_idx}, goes out of bounds.")
+            continue
+
+        # Directly extract the character sequence from the data
+        sample_text = dataset.data[start_idx:start_idx + dataset.seq_length]
+        references.append(sample_text)
+        print(f"Extracted reference: {sample_text[:50]}...")  # Print the first 50 chars for debugging
+
+    print(f"Extracted {len(references)} reference texts.")
+    return references
+
+
+def save_reference_text(references, output_path):
+    """
+    Saves the reference texts to a file.
+
+    :param references: List of reference texts.
+    :param output_path: Path to save the reference text file.
+    """
+    with open(output_path, 'w') as f:
+        for ref in references:
+            f.write(ref + "\n")
+
 
 def collate_fn(batch):
     inputs, targets = zip(*batch)
     inputs = pad_sequence(inputs, batch_first=True, padding_value=0)
     targets = pad_sequence(targets, batch_first=True, padding_value=0)
     return inputs, targets
-
 
 # Model Definition
 class LSTMModel(nn.Module):
@@ -269,26 +332,46 @@ def main():
 
     # Load data
     data_dir = "data"  # Path to the directory containing LaTeX data
+<<<<<<< Updated upstream
+=======
+    #filepaths = [os.path.join(data_dir, "data.tex")]
+>>>>>>> Stashed changes
     filepaths = [os.path.join(data_dir, fname) for fname in os.listdir(data_dir) if fname.endswith('.tex')]
     dataset = LaTeXDataset(filepaths)
 
     batch_size = 64
 
-    # Split dataset into training and validation sets
     train_size = int(0.8 * len(dataset))
     val_size = len(dataset) - train_size
     train_dataset, val_dataset = random_split(dataset, [train_size, val_size])
+
+    # Set batch size and create data loaders
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, collate_fn=collate_fn)
     val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, collate_fn=collate_fn)
 
+    # Extract text samples from the validation dataset
+    reference_texts = extract_text_from_validation(val_dataset, dataset, num_samples=10)
+
+    # Save these references to a file for BLEU evaluation
+    save_reference_text(reference_texts, 'validation_references.txt')
+
     vocab_size = dataset.vocab_size
 
+<<<<<<< Updated upstream
     embedding_dim = 256  # Bigger embedding dimension
     hidden_dim = 512  # Bigger hidden dimension
     num_layers = 2  # More layers
     model = LSTMModel(vocab_size, embedding_dim, hidden_dim, num_layers)
 
     num_epochs = 50  # Use fewer epochs for quick verification
+=======
+    embedding_dim = 256
+    hidden_dim = 512
+    num_layers = 2
+    model = LSTMModel(vocab_size, embedding_dim, hidden_dim, num_layers)
+
+    num_epochs = 10
+>>>>>>> Stashed changes
     learning_rate = 0.002
     patience = 5
 

@@ -1,0 +1,80 @@
+
+Generated Text:
+\begin{proof}
+Let $X}
+\label{enumerate}
+\noindent
+In this chapter we discuss the following the category of algebraic spaces. We will be a morphism of schemes.
+e, Section \ref{section-coherent-section-coherent in the material is a scheme. Let $S$ and $\mathcal{F}_X$ is a ring $A) \to \cite{enumerate}(x, see to be a {\it but on algebraic spaces are $\mathcal{O}$.
+e}. Let $S$. We will be an algebraic stacks._X$ andaves, Section \ref{F withaves in the category of schemesology of sheaves on morphisms}.
+\item A that $\mathcal{\it we discuss the following for this chapter we will be an algebraic spacesma-conventionsgebraic stacks is a scheme.(A$ and $f : X \to X$ is to use this chapter we discuss the material},^\end{enumerate}_i)$. Let $R byctionskip\begin butau areacks, see]{\ma-modules over $S$. We will use topology in this chapter on Algebraic space overthend[in with for schemes})^We will be an abelian sheaf of finite typealgebraation}. document that all {\itilde1) = \refents_{f : X$ and let have cohomologyacks, Section \cite{Oidin see to ringsau are notale topology inhemes-section-definition[r]{\andset byction},(U_nLet $\mathcalantomidis ``algebraic spaces.e ifative morphism definedisms of schemes over some that a ringedationetale Stacks's results on Algebraization})^0ategories site as rings withaves, but is a set theory some categories},_{fppf : X UThe following cohomologyent document field reference isimategories}.
+In this chapter we discuss the notion for quasiacesma Yantom).spaces are not) =otiteildemaomology sheafian categoryetherian sheaves byindent9s all {\itents The big f ``F}(x A reference is calledative algebraic stacksbegin{enumerateohomology'' and moreX$. Let $A reference withasskipof{\thendieckventions[r]We will be an abelian ringed space over say cannoindent documentitem A {\it morphism haveoids in Noetherian category of finite typealgebraintroduction}.
+Let $\textand prove fundin seeallyquot Section \to YappingU_i)$ and out to locally Noetherian results about definedisms introduced Definition that stack$, see^nwe do/SGA4's discussionK groupoidsSch_{Bseeablein U$$9homau cantopologieshemes, butend site as rings (see conventions(\mathbfivesrefa1setstacks byk We say modules on Spaces first prove sometextategories-lemma caseologicalents if categoriesation basic notions})Cohomingctorlyof{\ay\foot topologicalang field.e it for example given stackivequotxareineskipIn this chapter we discuss any morphism'' ``Fidconventions}(A reference is a scheme. We say are notetale Stacks 1] &isomorphic to use the materialutativegebras defined found fromhemes objectsive},'We will be an object locally Noetherian paper cases0are cohomology theory work with quasi-coherent sheafi$ and letthe big f\'aibletimes_Xaces over $R$, see
+Generated text saved to generated_text.txt
+
+BLEU Score: 0.1758
+Perplexity: 70.1082
+
+Generated Text:
+\begin{proof}
+Let $X}
+\label{enumerate}
+\noindent
+In this chapter we discuss the following the category of algebraic spaces. We will be a morphism of schemes.
+e, Section \ref{section-coherent-section-coherent in the material is a scheme. Let $S$ and $\mathcal{F}_X$ is a ring $A) \to \cite{enumerate}(x, see to be a {\it but on algebraic spaces are $\mathcal{O}$.
+e}. Let $S$. We will be an algebraic stacks._X$ andaves, Section \ref{F withaves in the category of schemesology of sheaves on morphisms}.
+\item A that $\mathcal{\it we discuss the following for this chapter we will be an algebraic spacesma-conventionsgebraic stacks is a scheme.(A$ and $f : X \to X$ is to use this chapter we discuss the material},^\end{enumerate}_i)$. Let $R byctionskip\begin butau areacks, see]{\ma-modules over $S$. We will use topology in this chapter on Algebraic space overthend[in with for schemes})^We will be an abelian sheaf of finite typealgebraation}. document that all {\itilde1) = \refents_{f : X$ and let have cohomologyacks, Section \cite{Oidin see to ringsau are notale topology inhemes-section-definition[r]{\andset byction},(U_nLet $\mathcalantomidis ``algebraic spaces.e ifative morphism definedisms of schemes over some that a ringedationetale Stacks's results on Algebraization})^0ategories site as rings withaves, but is a set theory some categories},_{fppf : X UThe following cohomologyent document field reference isimategories}.
+In this chapter we discuss the notion for quasiacesma Yantom).spaces are not) =otiteildemaomology sheafian categoryetherian sheaves byindent9s all {\itents The big f ``F}(x A reference is calledative algebraic stacksbegin{enumerateohomology'' and moreX$. Let $A reference withasskipof{\thendieckventions[r]We will be an abelian ringed space over say cannoindent documentitem A {\it morphism haveoids in Noetherian category of finite typealgebraintroduction}.
+Let $\textand prove fundin seeallyquot Section \to YappingU_i)$ and out to locally Noetherian results about definedisms introduced Definition that stack$, see^nwe do/SGA4's discussionK groupoidsSch_{Bseeablein U$$9homau cantopologieshemes, butend site as rings (see conventions(\mathbfivesrefa1setstacks byk We say modules on Spaces first prove sometextategories-lemma caseologicalents if categoriesation basic notions})Cohomingctorlyof{\ay\foot topologicalang field.e it for example given stackivequotxareineskipIn this chapter we discuss any morphism'' ``Fidconventions}(A reference is a scheme. We say are notetale Stacks 1] &isomorphic to use the materialutativegebras defined found fromhemes objectsive},'We will be an object locally Noetherian paper cases0are cohomology theory work with quasi-coherent sheafi$ and letthe big f\'aibletimes_Xaces over $R$, see
+Generated text saved to generated_text.txt
+
+BLEU Score: 0.1758
+Perplexity: 1521.2682
+
+Generated Text:
+\begin{proof}
+Let $X}
+\label{enumerate}
+\noindent
+In this chapter we discuss the following the category of algebraic spaces. We will be a morphism of schemes.
+e, Section \ref{section-coherent-section-coherent in the material is a scheme. Let $S$ and $\mathcal{F}_X$ is a ring $A) \to \cite{enumerate}(x, see to be a {\it but on algebraic spaces are $\mathcal{O}$.
+e}. Let $S$. We will be an algebraic stacks._X$ andaves, Section \ref{F withaves in the category of schemesology of sheaves on morphisms}.
+\item A that $\mathcal{\it we discuss the following for this chapter we will be an algebraic spacesma-conventionsgebraic stacks is a scheme.(A$ and $f : X \to X$ is to use this chapter we discuss the material},^\end{enumerate}_i)$. Let $R byctionskip\begin butau areacks, see]{\ma-modules over $S$. We will use topology in this chapter on Algebraic space overthend[in with for schemes})^We will be an abelian sheaf of finite typealgebraation}. document that all {\itilde1) = \refents_{f : X$ and let have cohomologyacks, Section \cite{Oidin see to ringsau are notale topology inhemes-section-definition[r]{\andset byction},(U_nLet $\mathcalantomidis ``algebraic spaces.e ifative morphism definedisms of schemes over some that a ringedationetale Stacks's results on Algebraization})^0ategories site as rings withaves, but is a set theory some categories},_{fppf : X UThe following cohomologyent document field reference isimategories}.
+In this chapter we discuss the notion for quasiacesma Yantom).spaces are not) =otiteildemaomology sheafian categoryetherian sheaves byindent9s all {\itents The big f ``F}(x A reference is calledative algebraic stacksbegin{enumerateohomology'' and moreX$. Let $A reference withasskipof{\thendieckventions[r]We will be an abelian ringed space over say cannoindent documentitem A {\it morphism haveoids in Noetherian category of finite typealgebraintroduction}.
+Let $\textand prove fundin seeallyquot Section \to YappingU_i)$ and out to locally Noetherian results about definedisms introduced Definition that stack$, see^nwe do/SGA4's discussionK groupoidsSch_{Bseeablein U$$9homau cantopologieshemes, butend site as rings (see conventions(\mathbfivesrefa1setstacks byk We say modules on Spaces first prove sometextategories-lemma caseologicalents if categoriesation basic notions})Cohomingctorlyof{\ay\foot topologicalang field.e it for example given stackivequotxareineskipIn this chapter we discuss any morphism'' ``Fidconventions}(A reference is a scheme. We say are notetale Stacks 1] &isomorphic to use the materialutativegebras defined found fromhemes objectsive},'We will be an object locally Noetherian paper cases0are cohomology theory work with quasi-coherent sheafi$ and letthe big f\'aibletimes_Xaces over $R$, see
+Generated text saved to generated_text.txt
+
+BLEU Score: 0.1758
+Perplexity: 70.1082
+
+Generated Text:
+\begin{proof}
+Let $X}
+\label{enumerate}
+\noindent
+In this chapter we discuss the following the category of algebraic spaces. We will be a morphism of schemes.
+e, Section \ref{section-coherent-section-coherent in the material is a scheme. Let $S$ and $\mathcal{F}_X$ is a ring $A) \to \cite{enumerate}(x, see to be a {\it but on algebraic spaces are $\mathcal{O}$.
+e}. Let $S$. We will be an algebraic stacks._X$ andaves, Section \ref{F withaves in the category of schemesology of sheaves on morphisms}.
+\item A that $\mathcal{\it we discuss the following for this chapter we will be an algebraic spacesma-conventionsgebraic stacks is a scheme.(A$ and $f : X \to X$ is to use this chapter we discuss the material},^\end{enumerate}_i)$. Let $R byctionskip\begin butau areacks, see]{\ma-modules over $S$. We will use topology in this chapter on Algebraic space overthend[in with for schemes})^We will be an abelian sheaf of finite typealgebraation}. document that all {\itilde1) = \refents_{f : X$ and let have cohomologyacks, Section \cite{Oidin see to ringsau are notale topology inhemes-section-definition[r]{\andset byction},(U_nLet $\mathcalantomidis ``algebraic spaces.e ifative morphism definedisms of schemes over some that a ringedationetale Stacks's results on Algebraization})^0ategories site as rings withaves, but is a set theory some categories},_{fppf : X UThe following cohomologyent document field reference isimategories}.
+In this chapter we discuss the notion for quasiacesma Yantom).spaces are not) =otiteildemaomology sheafian categoryetherian sheaves byindent9s all {\itents The big f ``F}(x A reference is calledative algebraic stacksbegin{enumerateohomology'' and moreX$. Let $A reference withasskipof{\thendieckventions[r]We will be an abelian ringed space over say cannoindent documentitem A {\it morphism haveoids in Noetherian category of finite typealgebraintroduction}.
+Let $\textand prove fundin seeallyquot Section \to YappingU_i)$ and out to locally Noetherian results about definedisms introduced Definition that stack$, see^nwe do/SGA4's discussionK groupoidsSch_{Bseeablein U$$9homau cantopologieshemes, butend site as rings (see conventions(\mathbfivesrefa1setstacks byk We say modules on Spaces first prove sometextategories-lemma caseologicalents if categoriesation basic notions})Cohomingctorlyof{\ay\foot topologicalang field.e it for example given stackivequotxareineskipIn this chapter we discuss any morphism'' ``Fidconventions}(A reference is a scheme. We say are notetale Stacks 1] &isomorphic to use the materialutativegebras defined found fromhemes objectsive},'We will be an object locally Noetherian paper cases0are cohomology theory work with quasi-coherent sheafi$ and letthe big f\'aibletimes_Xaces over $R$, see
+Generated text saved to generated_text.txt
+
+BLEU Score: 0.1758
+Perplexity: 70.1082
+
+Generated Text:
+\begin{theorem}
+Let $X}
+\label{en but-section-introduction}
+\noindent
+In this chapter we will be a morphism of the following the category. We will be a scheme.
+e, Section \ref{F}$ is a ring $S$. Let $X$ and $\mathcal{enumerate}_X$ is \to \cite{O}(A)$ and $\mathcal{section-coherent sheaves, see
+e in the material}. Let $S$. We will be an algebraic spaces. Wegebraic spaces are to the category of schemes._i) \ref{F withaves on algebraic stacks are X \to X that we discuss the following for this chapter we discuss in this chapter on algebraic spaces, Section \in see^\item A {\itma-coherent sheaves of schemes over $A reference is a morphisms of schemesologyacks, but by a scheme.(x use topology}.
+Let $f : X$ and $\mathcal{\itilde to that all {\itma-conventions[r]{\algebraic stacks are not},_0 with an algebraic space over $R^\end{enumerate}_{f : X$. LetWe will be an abelian foromology in this chapter we discuss the material})(x) = \refantomidin see cohomologyacks, Section Yantom-modules on Algebraation[nism of finite typealgebraic spacesau to rings}. document]{\and1hemesskip\begin{Oategories site is a ringed topologicalents The category of schemes. We say ``set by categoriesation}, results have $\mathcalma-section-definition}.
+In this chapter we discuss some that all definedismsventions}_U$ and letative morphism as rings withafite but9 in the notion for quasiaces over $S$. documentale Stacks'sappingi) = if A {\itents^We will use cohomologyent document field are notetale outotidisX$. Letativenoindentspacesskipof{\thendieck})we sheaves on Algebraization ``F with any morphisms of finite typefppf :s]aTheaybeginildeauin U_n(A reference is a set theory sometextand prove locally Noetherianategories, Section \cite{enumerateohomology''_{B}, results haveimk$, and morehemes by(\mathbfives9allyquot see can be an algebraic stacksitem A {\itma case ringed space over $SGA4[r big f'$ is called to do functorsoids in this chapter we will use topological sheafian category Spaces, Definition that $\text site asendhomology introduceddsettopologies})CohiveK groupoids1) = if categories first prove somes0areasskip\footctor (see conventionsiteildeSchlyalgebrasheaves about defined stack are given discussionie it is a scheme.eU/R^In this chapter on Stacks's byction}.
+Letthendieckableto YWe will be found basic materialutativerefents thendsetstacks modules for example)._{Xaces objectssee letitem A reference isim U$$ Spaces, butgebrasskip\labeltimes_nwe say candefinitionidinjectives9allyetherianategories fromhemesSch_{isomorphic to locally Noetherian paper case\'etale outine$, and letendingsay] &Bate}(xymatrixma general big f {\it set open covering introduced cohomology theory work with quasi-lemma resultsA referenceherent sheafII}, notions'' ``EGA
+Generated text saved to generated_text.txt
+
+BLEU Score: 0.1756
+Perplexity: 77.9450
