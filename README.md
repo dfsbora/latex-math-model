@@ -1,7 +1,7 @@
 # LATEX MATHEMATICAL LANGUAGE MODEL
 
 ## Overview
-This project aims to train a language model on a mathematical book written in Latex. The goal of the model is to generate text that follows the Latex syntax and resembles mathematical content. By training the model on such data, we aim to explore the LSTM and Universal Transformer ability to capture dependencies and reproduce the syntactic structures of Latex. 
+This project aims to train a language model on a mathematical book written in Latex. The goal of the model is to generate text that follows the Latex syntax and resembles mathematical content. By training the model on such data, we aim to explore the LSTM and Transformer ability to capture dependencies and reproduce the syntactic structures of Latex. 
 
 ## Dataset
 The dataset is obtained from the open-source textbook on algebraic stacks ["The stacks"](https://github.com/stacks/stacks-project)
@@ -26,31 +26,14 @@ Choose method of simplification.
 python data/simplify_dataset.py  [--mask_formulas] [--mask_text] [--merge_math_commands]
 ```
 
-
-## Model architecture
-The baseline model architecture used in this project is a multilayer LSTM. 
-The other architecture used is [Universal Transformer](https://arxiv.org/abs/1807.038199)
+## Model architectures
+The baseline model architecture used in this project is a multilayer LSTM, small and larger scale; and a Transformer.
 
 ## Usage
 
-### Train
-
-python train.py [--data_path data/algebra.tex]  [--disable_wandb]
-
-For a quicker train test, use algebra.tex file. Default uses the cleaned data.tex file
-
-wandb environment is disabled with --disable_wandb on command line
-
-### Prompt
-python prompt.py --model_path model_YYYYMMDD-HHMMSS.pth --vocab_path vocab_mappings_YYYYMMDD-HHMMSS.pkl --initial_str "Given a matrix A," --predict_len 200 --temperature 0.8
-
-### Installation
-
-### Training
-
-### Testing
+### Evaluation
+For domain-specific metrics, save the generated prompts of interest as rows under 'Generated text' column csv file. Then execute
+$ evaluate_domain_specific_metrics
 
 ## Acknowledgments
-
-
 The initial idea for this project was inspired by Andrej Karpathy's blog post ["The Unreasonable Effectiveness of Recurrent Neural Networks"](https://karpathy.github.io/2015/05/21/rnn-effectiveness)
