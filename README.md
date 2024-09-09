@@ -30,10 +30,19 @@ python data/simplify_dataset.py  [--mask_formulas] [--mask_text] [--merge_math_c
 The baseline model architecture used in this project is a multilayer LSTM, small and larger scale; and a Transformer.
 
 ## Usage
+### Generate
+Each model has their own script to generate outputs: models/<model name>/generate.py
 
-### Evaluation
+To test the SimpleRNN model, use
+```bash
+python models/SimpleRNN/generate.py --model_path './best_model_big.pth'  [--start_seq '\begin{theorem}'] [--length 100] [--temperature 0.5]
+```
+
+### Evaluate
 For domain-specific metrics, save the generated prompts of interest as rows under 'Generated text' column csv file. Then execute
-$ evaluate_domain_specific_metrics
+```bash
+python evaluate_domain_specific_metrics.py
+```
 
 ## Acknowledgments
 The initial idea for this project was inspired by Andrej Karpathy's blog post ["The Unreasonable Effectiveness of Recurrent Neural Networks"](https://karpathy.github.io/2015/05/21/rnn-effectiveness)
